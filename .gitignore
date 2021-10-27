@@ -1,0 +1,6 @@
+/etc
+/var
+/straight/build
+/straight/build-cache.el
+/straight/repos
+org-roam.db
