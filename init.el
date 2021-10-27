@@ -2,15 +2,21 @@
 ;;; instructions ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;
-;; Setup ;;
-;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;
+;; Before installing ;;
+;;;;;;;;;;;;;;;;;;;;;;;
 
-;; - Install =ag= and =fd= to make projectile faster
-;; - Run =M-x all-the-icons-install-fonts=
-;; - Run =M-x plantuml-download-jar=
-;; - Install Hack font
-;; - You need to have the ~/repos/tk-wiki git repository
+;; - Make sure you have the Hack font installed
+;; - Make sure you have the `~/repos/tk-wiki` directory (used by org-roam)
+;; - Make sure you have `gcc` installed (to compile emacs sql)
+;; - Make sure you have `ag` and `fd` installed (to make projectile faster)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; In the first opening ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; - Run `M-x all-the-icons-install-fonts`
+;; - Run `M-x plantuml-download-jar`
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Useful commands ;;
@@ -387,7 +393,7 @@
   (setq-default js-indent-level 2))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; misc ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package smartparens
@@ -433,7 +439,6 @@
     "p" #'plantuml-preview)
   :custom
   (plantuml-default-exec-mode 'jar))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; global key bindings ;;;;;;;;;;;;;;;;;;;
