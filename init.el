@@ -406,6 +406,9 @@
 (use-package ledger-mode
   :straight t)
 
+(use-package olivetti
+  :straight t)
+
 (use-package smartparens
   :straight t
   :hook ((after-init . smartparens-global-mode))
