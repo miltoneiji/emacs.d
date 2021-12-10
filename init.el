@@ -224,6 +224,22 @@
   (doom-themes-enable-bold t)
   (doom-themes-enable-italic t))
 
+(setq tk/themes '(doom-one doom-one-light))
+(setq tk/themes-index 0)
+
+(defun tk/cycle-theme ()
+  (interactive)
+  (setq tk/themes-index (% (1+ tk/themes-index) (length tk/themes)))
+  (tk/load-indexed-theme))
+
+(defun tk/load-indexed-theme ()
+  (tk/try-load-theme (nth tk/themes-index tk/themes)))
+
+(defun tk/try-load-theme (theme)
+  (if (ignore-errors (load-theme theme :no-confirm))
+      (mapcar #'disable-theme (remove theme custom-enabled-themes))
+    (message "Unable to find theme file for ‘%s’" theme)))
+
 ;; After installing, you will need to run =M-x all-the-icons-install-fonts=
 (use-package all-the-icons
   :straight t)
@@ -482,6 +498,11 @@
                     "u" '(:ignore t :which-key "util")
                     "u g" '(straight-freeze-versions :which-key "Generate lockfile")
                     "u e" '(straight-thaw-versions :which-key "Ensure lockfile"))
+
+(general-define-key :prefix "SPC"
+                    :states 'motion
+                    "t" '(:ignore t :which-key "toggle")
+                    "t t" '(tk/cycle-theme :which-key "Toggle theme"))
 
 ;; panel resize
 (define-key evil-motion-state-map (kbd "C-S-<right>") (lambda () (interactive) (enlarge-window 10 t)))
