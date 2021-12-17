@@ -9,3 +9,8 @@ All the instructions are in the `init.el` file.
 ```
 HOME=./where-your-.emacs.d-is emacs
 ```
+# Getting rev and sha256
+
+```
+nix-prefetch-git https://github.com/miltoneiji/emacs.d
+```
