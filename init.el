@@ -405,13 +405,6 @@
                       :states 'motion
                       "o u" '(org-roam-ui-mode :which-key "UI mode")))
 
-(defun writing-mode ()
-  (interactive)
-  (setq olivetti-mode t)
-  (setq global-display-line-numbers-mode nil)
-  (setq org-indent-mode nil)
-  (setq org-bullets-mode nil))
-
 ;;;;;;;;;;
 ;; Json ;;
 ;;;;;;;;;;
