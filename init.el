@@ -60,6 +60,10 @@
 (setq-default tab-width 4)
 (setq indent-line-function 'insert-tab)
 
+;; Increasing the amount of data which Emacs reads
+;; from the process. It increases the LSP performance
+(setq read-process-output-max (* 1024 1024)) ;; 1mb
+
 ;; use-package setup
 ;; the =use-package= macro allows you to isolate package configuration in your
 ;; .emacs file in a way that is both performance-oriented and, well, tidy.
