@@ -436,6 +436,19 @@
 ;;; misc ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; https://emacs.stackexchange.com/a/20530
+(defvar tk/window-split-saved-config nil)
+
+(defun tk/window-split-toggle-one-window ()
+  "Make the current window fill the frame. If there is only
+   one window try reverting to the most recently saved
+   window configuration."
+  (interactive)
+  (if (and tk/window-split-saved-config (not (window-parent)))
+      (set-window-configuration tk/window-split-saved-config)
+    (setq tk/window-split-saved-config (current-window-configuration))
+    (delete-other-windows)))
+
 (use-package ledger-mode
   :straight t)
 
@@ -520,6 +533,9 @@
                     :states 'motion
                     "t" '(:ignore t :which-key "toggle")
                     "t t" '(tk/cycle-theme :which-key "Toggle theme"))
+
+;; Toggle buffer fullscreen
+(define-key evil-motion-state-map (kbd "C-f") 'tk/window-split-toggle-one-window)
 
 ;; panel resize
 (define-key evil-motion-state-map (kbd "C-S-<right>") (lambda () (interactive) (enlarge-window 10 t)))
