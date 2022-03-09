@@ -7,7 +7,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; - Make sure you have the Hack font installed
-;; - Make sure you have the `~/repos/tk-wiki` directory (used by org-roam)
 ;; - Make sure you have `gcc` installed (to compile emacs sql)
 ;; - Make sure you have `ag` and `fd` installed (to make projectile faster)
 
@@ -16,7 +15,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; - Run `M-x all-the-icons-install-fonts`
-;; - Run `M-x plantuml-download-jar`
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Useful commands ;;
@@ -62,7 +60,7 @@
 
 ;; Increasing the amount of data which Emacs reads
 ;; from the process. It increases the LSP performance
-(setq read-process-output-max (* 1024 1024)) ;; 1mb
+(setq read-process-output-max (* 10 1024 1024)) ;; 10mb
 
 ;; use-package setup
 ;; the =use-package= macro allows you to isolate package configuration in your
@@ -149,7 +147,7 @@
     "Add project paths if they exist."
     (setq projectile-project-search-path
           (seq-filter #'file-directory-p paths)))
-  (tk/add-project-paths '("~/repos" "~/dev/nu")))
+  (tk/add-project-paths '("~/repos")))
 
 ;; this remaps projectile commands to use counsel
 (use-package counsel-projectile
@@ -385,43 +383,6 @@
   :custom
   (org-bullets-bullet-list '("◉" "○")))
 
-;; Second brain
-;; It may be necessary to call =org-roam-db-clear-all= and a sync after
-;; you use it in another pc.
-(use-package org-roam
-  :straight t
-  :init
-  (setq org-roam-v2-ack t)
-  :config
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "o" '(:ignore t :which-key "org")
-                      "o i" '(org-roam-node-insert :which-key "Insert node")
-                      "o f" '(org-roam-node-find :which-key "Find node")
-                      "o j" '((lambda () (interactive) (find-file "~/repos/tk-wiki/journal.org")) :which-key "Journal")
-                      "o a" '((lambda () (interactive) (find-file "~/repos/tk-wiki/fleeting.org")) :which-key "Fleeting")
-                      "o b" '(org-roam-buffer-toggle :which-key "Backlinks"))
-  (org-roam-db-autosync-mode)
-  :custom
-  (org-roam-db-location "~/.emacs.d/org-roam.db")
-  (org-roam-list-files-commands '(fd))
-  (org-roam-directory "~/repos/tk-wiki/pages")
-  (org-roam-dailies-directory "journal/"))
-
-;; dependencies for org-roam-ui
-(use-package websocket
-  :straight t)
-(use-package simple-httpd
-  :straight t)
-(use-package f
-  :straight t)
-(use-package org-roam-ui
-  :straight (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
-  :config
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "o u" '(org-roam-ui-mode :which-key "UI mode")))
-
 ;;;;;;;;;;
 ;; Json ;;
 ;;;;;;;;;;
@@ -486,18 +447,6 @@
 (use-package autorevert
   :straight (:type built-in)
   :hook (after-init . global-auto-revert-mode))
-
-;; The first time you run this package, you will need to run
-;; plantuml-download-jar
-(use-package plantuml-mode
-  :straight t
-  :commands plantuml-download-jar
-  :mode "\\.plantuml\\'"
-  :general
-  (my-local-leader-def 'normal 'override
-    "p" #'plantuml-preview)
-  :custom
-  (plantuml-default-exec-mode 'jar))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; global key bindings ;;;;;;;;;;;;;;;;;;;
