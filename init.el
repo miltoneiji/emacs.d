@@ -71,6 +71,8 @@
 ;;   even if the package is deferred).
 ;; - use =:config= to execute code after a package is loaded.
 (straight-use-package 'use-package)
+;; to avoid having to add :straight t in all use-package statements
+(setq straight-use-package-by-default t)
 
 ;; To gather statistics about how many packages you've loaded, how much time
 ;; they've spent, etc.
@@ -80,12 +82,10 @@
 ;; Keep ~/.emacs.d clean
 ;; This should be called as early as possible
 (use-package no-littering
-  :straight t
   :config (require 'no-littering))
 
 ;; ensure environmental variables inside Emacs look the same as in the user's shell
 (use-package exec-path-from-shell
-  :straight t
   :config
   (progn
     (when (memq window-system '(mac ns x))
@@ -93,7 +93,6 @@
 
 ;; evil
 (use-package evil
-  :straight t
   :config
   (evil-mode 1)
   :custom
@@ -103,14 +102,12 @@
   (evil-want-keybinding nil))
 
 (use-package evil-escape
-  :straight t
   :config
   (evil-escape-mode 1)
   :custom
   (evil-escape-key-sequence "jk"))
 
 (use-package evil-collection
-  :straight t
   :config
   (evil-collection-init 'dired)
   (evil-collection-init 'ivy)
@@ -122,14 +119,12 @@
 ;; Unbinding SPC since it will be used as a prefix
 (define-key evil-motion-state-map (kbd "SPC") nil)
 
-(use-package general
-  :straight t)
+(use-package general)
 
 (general-create-definer my-local-leader-def :prefix my-local-leader)
 
 ;; it is recommended that you install =fd= and =ag= to makes things faster
 (use-package projectile
-  :straight t
   :init
   (projectile-mode +1)
   :config
@@ -151,7 +146,6 @@
 
 ;; this remaps projectile commands to use counsel
 (use-package counsel-projectile
-  :straight t
   :init (counsel-projectile-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -161,28 +155,24 @@
 ;; text completion framework for Emacs. It uses pluggable back-ends and front-ends to retrieve
 ;; and display completion candidates.
 (use-package company
-  :straight t
   :hook ((after-init . global-company-mode))
   :custom
   (company-idle-delay 0))
 
 ;; a generic completion mechanism for Emacs
 (use-package ivy
-  :straight t
   :init (ivy-mode)
   :custom
   (ivy-use-selectable-prompt t))
 
 ;; a collection of Ivy-enhanced versions of common Emacs commands
 (use-package counsel
-  :straight t
   ;; Enabling =counsel-mode= remaps built-in Emacs funcions that have counsel replacement
   :init (counsel-mode))
 
 ;; a minor mode that displays the key bindings following your currently entered incomplete
 ;; command in a popup.
 (use-package which-key
-  :straight t
   :init
   (which-key-mode)
   :config
@@ -196,8 +186,7 @@
   (which-key-side-window-slot -10))
 
 ;; template system for Emacs
-(use-package yasnippet
-  :straight t)
+(use-package yasnippet)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; ui ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -215,7 +204,6 @@
 (tk/set-font)
 
 (use-package doom-themes
-  :straight t
   :config
   (load-theme 'doom-one t)
   ;; Enable custom neotree theme
@@ -243,15 +231,12 @@
     (message "Unable to find theme file for ‘%s’" theme)))
 
 ;; After installing, you will need to run =M-x all-the-icons-install-fonts=
-(use-package all-the-icons
-  :straight t)
+(use-package all-the-icons)
 
 (use-package doom-modeline
-  :straight t
   :init (doom-modeline-mode 1))
 
 (use-package neotree
-  :straight t
   :hook (neotree-mode . (lambda ()
                           (display-line-numbers-mode -1)
                           (define-key evil-normal-state-local-map (kbd "TAB") 'neotree-enter)
@@ -282,7 +267,6 @@
 
 ;; Show inserted/modified/deleted lines in files that have version control
 (use-package git-gutter-fringe
-  :straight t
   :config
   (global-git-gutter-mode))
 
@@ -291,7 +275,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package lsp-mode
-  :straight t
   :init
   (setq lsp-keymap-prefix "C-c l")
   :hook ((ruby-mode . lsp)
@@ -299,11 +282,9 @@
   :commands lsp)
 
 (use-package lsp-ui
-  :straight t
   :commands lsp-ui-mode)
 
 (use-package lsp-ivy
-  :straight t
   :commands lsp-ivy-workspace-symbol)
 
 ;;;;;;;;;;
@@ -314,17 +295,14 @@
 ;; Clojure ;;
 ;;;;;;;;;;;;;
 
-(use-package clojure-mode
-  :straight t)
+(use-package clojure-mode)
 
 (use-package clj-refactor
-  :straight t
   :hook (clojure-mode . (lambda ()
                           (clj-refactor-mode 1)
                           (yas-minor-mode 1))))
 
 (use-package cider
-  :straight t
   :config
   (add-to-list 'cider-test-defining-forms "defflow")
   (general-define-key
@@ -355,7 +333,6 @@
 ;;;;;;;;;
 
 (use-package org
-  :straight t
   :hook (org-mode . tk/org-mode-setup)
   :config
   (defun tk/org-mode-setup ()
@@ -378,7 +355,6 @@
 
 ;; Pure asthetics
 (use-package org-bullets
-  :straight t
   :hook (org-mode . (lambda () (org-bullets-mode 1)))
   :custom
   (org-bullets-bullet-list '("◉" "○")))
@@ -388,7 +364,6 @@
 ;;;;;;;;;;
 
 (use-package json-mode
-  :straight t
   :mode "\\.json\\'"
   :config
   (setq-default js-indent-level 2))
@@ -410,14 +385,11 @@
     (setq tk/window-split-saved-config (current-window-configuration))
     (delete-other-windows)))
 
-(use-package ledger-mode
-  :straight t)
+(use-package ledger-mode)
 
-(use-package olivetti
-  :straight t)
+(use-package olivetti)
 
 (use-package smartparens
-  :straight t
   :hook ((after-init . smartparens-global-mode))
   :config
   (require 'smartparens-config)
@@ -429,11 +401,9 @@
                       "k L" '(sp-forward-sexp :which-key "next expression")))
 
 (use-package flycheck
-  :straight t
   :hook ((after-init . global-flycheck-mode)))
 
 (use-package magit
-  :straight t
   :config
   (general-define-key :prefix "SPC"
                       :states 'motion
