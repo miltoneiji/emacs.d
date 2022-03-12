@@ -287,10 +287,6 @@
 (use-package lsp-ivy
   :commands lsp-ivy-workspace-symbol)
 
-;;;;;;;;;;
-;; Ruby ;;
-;;;;;;;;;;
-
 ;;;;;;;;;;;;;
 ;; Clojure ;;
 ;;;;;;;;;;;;;
@@ -386,8 +382,6 @@
     (delete-other-windows)))
 
 (use-package ledger-mode)
-
-(use-package olivetti)
 
 (use-package smartparens
   :hook ((after-init . smartparens-global-mode))
