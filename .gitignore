@@ -4,3 +4,5 @@
 /straight/build-cache.el
 /straight/repos
 org-roam.db
+.cache
+eln-cache/
