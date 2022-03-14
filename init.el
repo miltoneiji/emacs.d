@@ -322,7 +322,10 @@
   :custom
   (cider-repl-display-help-banner nil))
 
-(use-package git-auto-commit-mode)
+(use-package git-auto-commit-mode
+  :custom
+  (gac-automatically-push-p t)
+  (gac-automatically-add-new-files-p t))
 
 ;;;;;;;;;
 ;; Org ;;
