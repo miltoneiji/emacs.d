@@ -322,7 +322,7 @@
   :custom
   (cider-repl-display-help-banner nil))
 
-
+(use-package git-auto-commit-mode)
 
 ;;;;;;;;;
 ;; Org ;;
