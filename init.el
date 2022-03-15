@@ -71,7 +71,7 @@
 ;;   even if the package is deferred).
 ;; - use =:config= to execute code after a package is loaded.
 (straight-use-package 'use-package)
-;; to avoid having to add :straight t in all use-package statements
+;; avoid having to add :straight t in all use-package statements
 (setq straight-use-package-by-default t)
 
 ;; To gather statistics about how many packages you've loaded, how much time
@@ -205,10 +205,10 @@
 
 (use-package doom-themes
   :config
-  (load-theme 'doom-one t)
+  (load-theme 'doom-vibrant t)
   ;; Enable custom neotree theme
   (doom-themes-neotree-config)
-  ;; Corrects (and improves) org-mode's native fontification.
+  ;; Corrects (and i proves) org-mode's native fontification.
   (doom-themes-org-config)
   :custom
   (doom-themes-enable-bold t)
@@ -236,34 +236,23 @@
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
 
-(use-package neotree
-  :hook (neotree-mode . (lambda ()
-                          (display-line-numbers-mode -1)
-                          (define-key evil-normal-state-local-map (kbd "TAB") 'neotree-enter)
-                          (define-key evil-normal-state-local-map (kbd "RET") 'neotree-enter)
-                          (define-key evil-normal-state-local-map (kbd "c") 'neotree-create-node)
-                          (define-key evil-normal-state-local-map (kbd "d") 'neotree-delete-node)
-                          ;; for some reason, this is not working
-                          (define-key evil-normal-state-local-map (kbd "r") 'neotree-rename-node)))
+;; File and project explorer
+(use-package treemacs
+  :hook ((treemacs-mode . (lambda() (display-line-numbers-mode -1))))
+  :custom
+  (treemacs-width 30)
+  (treemacs-show-hidden-files t)
+  (treemacs-resize-icons 22)
+  (treemacs-RET-actions-config treemacs-doubleclick-actions-config)
+  (treemacs-filewatch-mode t)
+  (treemacs-fringe-indicator-mode 'always)
   :config
-  (defun tk/toggle-neotree ()
-    "Open NeoTree using the git root."
-    (interactive)
-    (let ((project-dir (projectile-project-root))
-          (file-name (buffer-file-name)))
-      (neotree-toggle)
-      (if project-dir
-          (if (neo-global--window-exists-p)
-              (progn
-                (neotree-dir project-dir)
-                (neotree-find file-name)))
-        (message "Could not find git project root."))))
-
   (general-define-key :prefix "SPC"
                       :states 'motion
-                      "p t" '(tk/toggle-neotree :which-key "Toggle neotree"))
-  :custom
-  (neo-show-hidden-files t))
+                      "p t" '(treemacs :which-key "Toggle file explorer")))
+(use-package treemacs-evil)
+(use-package treemacs-projectile)
+(use-package treemacs-magit)
 
 ;; Show inserted/modified/deleted lines in files that have version control
 (use-package git-gutter-fringe
@@ -286,46 +275,6 @@
 
 (use-package lsp-ivy
   :commands lsp-ivy-workspace-symbol)
-
-;;;;;;;;;;;;;
-;; Clojure ;;
-;;;;;;;;;;;;;
-
-(use-package clojure-mode)
-
-(use-package clj-refactor
-  :hook (clojure-mode . (lambda ()
-                          (clj-refactor-mode 1)
-                          (yas-minor-mode 1))))
-
-(use-package cider
-  :config
-  (add-to-list 'cider-test-defining-forms "defflow")
-  (general-define-key
-   :states 'normal
-   :keymaps 'cider-repl-mode-map
-   ", c" '(cider-repl-clear-buffer :which-key "Clean buffer"))
-  :hook (clojure-mode . (lambda ()
-                          (define-clojure-indent
-                            (flow 1))))
-  :general
-  (my-local-leader-def 'normal 'override
-    "a" #'cider-jack-in
-    ;; eval
-    "e f" #'cider-eval-defun-at-point
-    "e e" #'cider-eval-last-sexp
-    "e b" #'cider-eval-buffer
-    ;; repl
-    "r b" #'cider-switch-to-repl-buffer
-    ;; test
-    "t t" #'cider-test-run-test)
-  :custom
-  (cider-repl-display-help-banner nil))
-
-(use-package git-auto-commit-mode
-  :custom
-  (gac-automatically-push-p t)
-  (gac-automatically-add-new-files-p t))
 
 ;;;;;;;;;
 ;; Org ;;
@@ -371,21 +320,6 @@
 ;;; misc ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; https://emacs.stackexchange.com/a/20530
-(defvar tk/window-split-saved-config nil)
-
-(defun tk/window-split-toggle-one-window ()
-  "Make the current window fill the frame. If there is only
-   one window try reverting to the most recently saved
-   window configuration."
-  (interactive)
-  (if (and tk/window-split-saved-config (not (window-parent)))
-      (set-window-configuration tk/window-split-saved-config)
-    (setq tk/window-split-saved-config (current-window-configuration))
-    (delete-other-windows)))
-
-(use-package ledger-mode)
-
 (use-package smartparens
   :hook ((after-init . smartparens-global-mode))
   :config
@@ -397,6 +331,7 @@
                       "k r" '(sp-raise-sexp :which-key "raise")
                       "k L" '(sp-forward-sexp :which-key "next expression")))
 
+;; Syntax checking
 (use-package flycheck
   :hook ((after-init . global-flycheck-mode)))
 
