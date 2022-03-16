@@ -145,8 +145,25 @@
   (tk/add-project-paths '("~/repos")))
 
 ;; this remaps projectile commands to use counsel
-(use-package counsel-projectile
-  :init (counsel-projectile-mode))
+;(use-package counsel-projectile
+;  :init (counsel-projectile-mode))
+
+;; Search
+;; useful:
+;;   - ag-kill-buffers: "Kill all ag-mode buffers."
+;;   - ag-project-files: "Search using ag for a given literal search STRING, limited to files that match FILE-TYPE. STRING defaults to the symbol under point."
+;;   - ag-project: "Guess the root of the current project and search it with ag for the given literal search STRING."
+;;   - ag-files: "Search using ag in a given DIRECTORY"
+;;
+;; winnow:
+;;   - m: show only files that match
+;;   - x: exclude files that match
+;;   - recompile: sdf
+(use-package winnow)
+(use-package ag
+  :hook ((ag-mode . winnow-mode))
+  :custom
+  (ag-highlight-search t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; completion ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
