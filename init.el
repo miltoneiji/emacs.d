@@ -124,6 +124,7 @@
                       "p i" '(projectile-invalidate-cache :which-key "Invalidate cache")
                       "SPC" '(projectile-find-file :which-key "Find file")
                       "p /" '(ag-project :which-key "Search")
+		      "p a" '(projectile-toggle-between-implementation-and-test :which-key "Test/Impl")
                       "p D" '(projectile-dired-other-window :which-key "Dired"))
   (tk/add-project-paths '("~/repos")))
 
