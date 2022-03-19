@@ -205,7 +205,7 @@
 ;; Theme ;;
 ;;;;;;;;;;;
 
-(use-package modus-theme
+(use-package modus-themes
   :config
   (load-theme 'modus-vivendi t))
 
@@ -501,6 +501,13 @@
                     "t t" '(tk/cycle-theme :which-key "Toggle theme")
                     "t r" '(toggle-truncate-lines :which-key "Toggle truncate lines")
                     "t l" '(display-line-numbers-mode :which-key "Toggle line number"))
+
+;;;;;;;;;
+;; Nix ;;
+;;;;;;;;;
+
+(use-package nix-mode
+  :mode "\\.nix\\'")
 
 ;;;;;;;;;;;;;
 ;; Windows ;;
