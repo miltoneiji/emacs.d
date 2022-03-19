@@ -55,10 +55,6 @@ This ain't a typewriter."
   (tool-bar-mode -1)
   (scroll-bar-mode -1))
 
-(defun tk-defaults/show-line-number ()
-  "I want to know in which line I am."
-  (global-display-line-numbers-mode))
-
 (defun tk-defaults/show-column-number ()
   "I also want to know in which column I am."
   (setq column-number-mode t))
@@ -81,7 +77,6 @@ This ain't a typewriter."
   (tk-defaults/highlight-current-line)
   (tk-defaults/disable-gui-elements)
   (tk-defaults/show-column-number)
-  (tk-defaults/show-line-number)
   (tk-defaults/quit-prompts-with-esc)
   (tk-defaults/break-line-automatically-in-text-modes))
 

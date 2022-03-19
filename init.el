@@ -1,31 +1,21 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; instructions ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init.el --- Startup file for Emacs      -*- lexical-binding: t; -*-
 
-;;;;;;;;;;;;;;;;;;;;;;;
-;; Before installing ;;
-;;;;;;;;;;;;;;;;;;;;;;;
+;;; Commentary:
 
-;; - Make sure you have the Hack font installed
-;; - Make sure you have `gcc` installed (to compile emacs sql)
-;; - Make sure you have `ag` and `fd` installed (to make projectile faster)
+;;; Make sure you have the =Hack= font installed.
+;;; Make sure you have =ag= and =fd= installed.
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; In the first opening ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; =C-h= is your friend!
 
-;; - Run `M-x all-the-icons-install-fonts`
-
-;;;;;;;;;;;;;;;;;;;;;
-;; Useful commands ;;
-;;;;;;;;;;;;;;;;;;;;;
-
-;; - =C-h k= shows what command is executed by a key binding
-;; - =C-h= is very helpful when trying to understand things
+;;; Code:
 
 ;; Allow 100MB of memory before calling garbage collection. This means CG runs less often,
 ;; which speeds up some operations.
 (setq gc-cons-threshold (* 100 1024 1024))
+
+;; Increasing the amount of data which Emacs reads
+;; from the process. It increases the LSP performance
+(setq read-process-output-max (* 3 1024 1024)) ;; 3mb
 
 ;;; straight.el bootstrap
 (defvar bootstrap-version)
@@ -46,21 +36,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Loading my preferences
-(load-file "~/.emacs.d/tk-defaults.el")
+(load-file "./.emacs.d/tk-defaults.el")
 (tk-defaults/use-all-settings)
 
 ;; Get rid of the scroll jumpiness
 (setq scroll-step           1
       scroll-conservatively 10000)
 
-;; Set Tab indent as 4 spaces
-(setq-default indent-tabs-mode nil)
-(setq-default tab-width 4)
-(setq indent-line-function 'insert-tab)
-
-;; Increasing the amount of data which Emacs reads
-;; from the process. It increases the LSP performance
-(setq read-process-output-max (* 10 1024 1024)) ;; 10mb
+;;;;;;;;;;
+;; Tabs ;;
+;;;;;;;;;;
+(setq indent-tabs-mode nil)
 
 ;; use-package setup
 ;; the =use-package= macro allows you to isolate package configuration in your
@@ -74,11 +60,6 @@
 ;; avoid having to add :straight t in all use-package statements
 (setq straight-use-package-by-default t)
 
-;; To gather statistics about how many packages you've loaded, how much time
-;; they've spent, etc.
-;; Just uncomment this, restart Emacs and run =M-x use-package-report=
-;;(setq use-package-compute-statistics t)
-
 ;; Keep ~/.emacs.d clean
 ;; This should be called as early as possible
 (use-package no-littering
@@ -90,6 +71,8 @@
   (progn
     (when (memq window-system '(mac ns x))
       (exec-path-from-shell-initialize))))
+
+(use-package general)
 
 ;; evil
 (use-package evil
@@ -113,17 +96,22 @@
   (evil-collection-init 'ivy)
   (evil-collection-init 'magit))
 
-;; =general.el= provides a more convenient method for binding keys in emacs.
-(defconst my-local-leader ",")
-
 ;; Unbinding SPC since it will be used as a prefix
 (define-key evil-motion-state-map (kbd "SPC") nil)
 
-(use-package general)
+(general-create-definer map-local!
+  :states 'motion
+  :keymaps 'override
+  :prefix ",")
 
-(general-create-definer my-local-leader-def :prefix my-local-leader)
+;;;;;;;;;;;;;;;;;;;;;;;;
+;; Project management ;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+(defun tk/add-project-paths (paths)
+    "Add PATHS to projectile projects path if they exist."
+    (setq projectile-project-search-path
+          (seq-filter #'file-directory-p paths)))
 
-;; it is recommended that you install =fd= and =ag= to makes things faster
 (use-package projectile
   :init
   (projectile-mode +1)
@@ -135,39 +123,30 @@
                       "p l" '(projectile-discover-projects-in-search-path :which-key "Discover projects")
                       "p i" '(projectile-invalidate-cache :which-key "Invalidate cache")
                       "SPC" '(projectile-find-file :which-key "Find file")
-                      "p /" '(projectile-ag :which-key "Search")
+                      "p /" '(ag-project :which-key "Search")
                       "p D" '(projectile-dired-other-window :which-key "Dired"))
-
-  (defun tk/add-project-paths (paths)
-    "Add project paths if they exist."
-    (setq projectile-project-search-path
-          (seq-filter #'file-directory-p paths)))
   (tk/add-project-paths '("~/repos")))
 
-;; this remaps projectile commands to use counsel
-;(use-package counsel-projectile
-;  :init (counsel-projectile-mode))
+;;;;;;;;;;;;
+;; Search ;;
+;;;;;;;;;;;;
 
-;; Search
-;; useful:
-;;   - ag-kill-buffers: "Kill all ag-mode buffers."
-;;   - ag-project-files: "Search using ag for a given literal search STRING, limited to files that match FILE-TYPE. STRING defaults to the symbol under point."
-;;   - ag-project: "Guess the root of the current project and search it with ag for the given literal search STRING."
-;;   - ag-files: "Search using ag in a given DIRECTORY"
-;;
-;; winnow:
-;;   - m: show only files that match
-;;   - x: exclude files that match
-;;   - recompile: sdf
-(use-package winnow)
 (use-package ag
-  :hook ((ag-mode . winnow-mode))
   :custom
-  (ag-highlight-search t))
+  (ag-highlight-search t)
+  :config
+  (general-define-key :prefix "SPC"
+                      :states 'motion
+                      "s" '(:ignore t :which-key "search")
+                      "s p" '(ag-project :which-key "Search in project")
+                      "s P" '(ag-project-files :which-key "Search in project by filetype")
+                      "s s" '(ag :which-key "Search")
+                      "s S" '(ag-files :which-key "Search by filetype")
+                      "s k" '(ag-kill-buffers :which-key "Kill search buffers")))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; completion ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;
+;;; completion ;;
+;;;;;;;;;;;;;;;;;
 
 ;; text completion framework for Emacs. It uses pluggable back-ends and front-ends to retrieve
 ;; and display completion candidates.
@@ -202,14 +181,16 @@
   (which-key-min-display-lines 6)
   (which-key-side-window-slot -10))
 
-;; template system for Emacs
+;;;;;;;;;;;;;;;;;;;;;
+;; Template system ;;
+;;;;;;;;;;;;;;;;;;;;;
+
 (use-package yasnippet)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; ui ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;
+;; Font ;;
+;;;;;;;;;;
 
-;; Font
 (defun tk/set-font ()
   "Set the font according to the Operating System."
   (set-face-attribute 'default nil :family "Hack")
@@ -220,18 +201,15 @@
 
 (tk/set-font)
 
-(use-package doom-themes
-  :config
-  (load-theme 'doom-vibrant t)
-  ;; Enable custom neotree theme
-  (doom-themes-neotree-config)
-  ;; Corrects (and i proves) org-mode's native fontification.
-  (doom-themes-org-config)
-  :custom
-  (doom-themes-enable-bold t)
-  (doom-themes-enable-italic t))
+;;;;;;;;;;;
+;; Theme ;;
+;;;;;;;;;;;
 
-(setq tk/themes '(doom-one doom-one-light))
+(use-package modus-theme
+  :config
+  (load-theme 'modus-vivendi t))
+
+(setq tk/themes '(modus-vivendi modus-operandi))
 (setq tk/themes-index 0)
 
 (defun tk/cycle-theme ()
@@ -247,13 +225,19 @@
       (mapcar #'disable-theme (remove theme custom-enabled-themes))
     (message "Unable to find theme file for ‘%s’" theme)))
 
-;; After installing, you will need to run =M-x all-the-icons-install-fonts=
-(use-package all-the-icons)
+;;;;;;;;;;;;;;;
+;; Mode line ;;
+;;;;;;;;;;;;;;;
 
-(use-package doom-modeline
-  :init (doom-modeline-mode 1))
+(use-package mood-line
+  :straight (:host github :repo "miltoneiji/mood-line")
+  :config
+  (mood-line-mode))
 
-;; File and project explorer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; File and project explorer ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (use-package treemacs
   :hook ((treemacs-mode . (lambda() (display-line-numbers-mode -1))))
   :custom
@@ -263,6 +247,7 @@
   (treemacs-RET-actions-config treemacs-doubleclick-actions-config)
   (treemacs-filewatch-mode t)
   (treemacs-fringe-indicator-mode 'always)
+  (treemacs-no-png-images t)
   :config
   (general-define-key :prefix "SPC"
                       :states 'motion
@@ -270,28 +255,6 @@
 (use-package treemacs-evil)
 (use-package treemacs-projectile)
 (use-package treemacs-magit)
-
-;; Show inserted/modified/deleted lines in files that have version control
-(use-package git-gutter-fringe
-  :config
-  (global-git-gutter-mode))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; lang ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package lsp-mode
-  :init
-  (setq lsp-keymap-prefix "C-c l")
-  :hook ((ruby-mode . lsp)
-         (lsp-mode . lsp-enable-which-key-integration))
-  :commands lsp)
-
-(use-package lsp-ui
-  :commands lsp-ui-mode)
-
-(use-package lsp-ivy
-  :commands lsp-ivy-workspace-symbol)
 
 ;;;;;;;;;
 ;; Org ;;
@@ -324,14 +287,115 @@
   :custom
   (org-bullets-bullet-list '("◉" "○")))
 
+;;;;;;;;;;;
+;; Scala ;;
+;;;;;;;;;;;
+
+(use-package scala-mode)
+
+;;;;;;;;;;;;;
+;; Clojure ;;
+;;;;;;;;;;;;;
+
+(defun tk/clean-repl ()
+  "Cleans repl buffer without having to change to it."
+  (interactive)
+  (cider-switch-to-repl-buffer)
+  (cider-repl-clear-buffer)
+  (cider-switch-to-last-clojure-buffer))
+
+(use-package clojure-mode)
+
+(use-package cider
+  :custom
+  (cider-repl-display-help-banner nil)
+  :config
+  (map-local! clojure-mode-map
+    "a"   'cider-jack-in
+    "e"   '(:ignore t :which-key "eval")
+    "e f" 'cider-eval-defun-at-point
+    "e e" 'cider-eval-last-sexp
+    "e b" 'cider-eval-buffer
+    "r"   '(:ignore t :which-key "repl")
+    "r b" 'cider-switch-to-repl-buffer
+    "r c" 'tk/clean-repl
+    "t"   '(:ignore t :which-key "test")
+    "t t" 'cider-test-run-test))
+
+(use-package clj-refactor
+  :hook ((clojure-mode . (lambda ()
+			   (clj-refactor-mode 1)
+			   (yas-minor-mode 1)))))
+
+;;;;;;;;;
+;; LSP ;;
+;;;;;;;;;
+
+(use-package lsp-mode
+  :hook ((ruby-mode . lsp))
+  :commands lsp
+  :custom
+  (lsp-restart 'auto-restart)
+  (lsp-idle-delay 0.50)
+  (lsp-log-io nil)
+  (lsp-completion-provider :capf))
+
+(use-package lsp-ui)
+
 ;;;;;;;;;;
-;; Json ;;
+;; Ruby ;;
 ;;;;;;;;;;
 
-(use-package json-mode
-  :mode "\\.json\\'"
-  :config
-  (setq-default js-indent-level 2))
+(use-package ruby-mode
+  :hook ((ruby-mode . (lambda ()
+			(set-fill-column 80)
+			(add-hook 'before-save-hook 'delete-trailing-whitespace)
+			(ruby-insert-encoding-magic-comment nil)))))
+
+;;;;;;;;;;;
+;; Elisp ;;
+;;;;;;;;;;;
+
+(add-hook 'emacs-lisp-mode-hook
+	  (lambda ()
+	    (map-local! emacs-lisp-mode-map
+	      "e"   '(:ignore t :which-key "eval")
+	      "e e" 'eval-last-sexp
+	      "e b" 'eval-buffer)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Frontend development ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package web-mode
+  :init
+  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.hbs\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.jsx?\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.json\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.s?css\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.less\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.sass\\'" . web-mode))
+  :custom
+  (web-mode-markup-indent-offset 2)
+  (web-mode-attr-indent-offset 2)
+  (web-mode-css-indent-offset 2)
+  (web-mode-code-indent-offset 2)
+  (web-mode-enable-auto-pairing t)
+  (web-mode-enable-css-colorization t))
+
+;;;;;;;;;;;;;;
+;; Protobuf ;;
+;;;;;;;;;;;;;;
+
+(use-package protobuf-mode)
+
+;;;;;;;;;;
+;; YAML ;;
+;;;;;;;;;;
+
+(use-package yaml-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; misc ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -352,6 +416,30 @@
 (use-package flycheck
   :hook ((after-init . global-flycheck-mode)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Colors in compilation mode ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun tk/advice-compilation-filter (f proc string)
+  "F, PROC, STRING. Happy flycheck?"
+  (funcall f proc (if (string-prefix-p "*compilation" (buffer-name (process-buffer proc)))
+		      (xterm-color-filter string)
+		    string)))
+
+(use-package xterm-color
+  :custom
+  (compilation-environment '("TERM=xterm-256color"))
+  :config
+  (advice-add 'compilation-filter :around #'tk/advice-compilation-filter))
+
+;;;;;;;;;;;;;;;;;;;;;
+;; Version control ;;
+;;;;;;;;;;;;;;;;;;;;;
+
+(use-package git-gutter-fringe
+  :config
+  (global-git-gutter-mode))
+
 (use-package magit
   :config
   (general-define-key :prefix "SPC"
@@ -367,21 +455,31 @@
   :straight (:type built-in)
   :hook (after-init . global-auto-revert-mode))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; global key bindings ;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Other key bindings ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun tk/open-config ()
+  "Open init.el."
+  (interactive)
+  (find-file user-init-file))
+
+(defun tk/load-config ()
+  "Load my init.el."
+  (interactive)
+  (load-file user-init-file))
 
 ;; Common key bindings
 (define-key evil-motion-state-map (kbd "SPC TAB") '("Previous" . evil-switch-to-windows-last-buffer))
-(define-key evil-motion-state-map (kbd "SPC :") '("M-:" . execute-extended-command))
-(define-key evil-motion-state-map (kbd "SPC ;") '("Eval expression" . pp-eval-expression))
+(define-key evil-motion-state-map (kbd "SPC :")   '("M-:" . execute-extended-command))
+(define-key evil-motion-state-map (kbd "SPC ;")   '("Eval expression" . pp-eval-expression))
 
 (general-define-key :prefix "SPC"
                     :states 'motion
                     "f" '(:ignore t :which-key "file")
                     "f f" '(find-file :which-key "Find file")
-                    "f p" '((lambda () (interactive) (find-file user-init-file)) :which-key "Open init.el")
-                    "f r" '((lambda () (interactive) (load-file user-init-file)) :which-key "Reload init.el"))
+                    "f p" '(tk/open-config :which-key "Open init.el")
+                    "f r" '(tk/load-config :which-key "Reload init.el"))
 
 (general-define-key :prefix "SPC"
                     :states 'motion
@@ -400,13 +498,18 @@
 (general-define-key :prefix "SPC"
                     :states 'motion
                     "t" '(:ignore t :which-key "toggle")
-                    "t t" '(tk/cycle-theme :which-key "Toggle theme"))
+                    "t t" '(tk/cycle-theme :which-key "Toggle theme")
+                    "t r" '(toggle-truncate-lines :which-key "Toggle truncate lines")
+                    "t l" '(display-line-numbers-mode :which-key "Toggle line number"))
 
-;; Toggle buffer fullscreen
-(define-key evil-motion-state-map (kbd "C-f") 'tk/window-split-toggle-one-window)
+;;;;;;;;;;;;;
+;; Windows ;;
+;;;;;;;;;;;;;
 
-;; panel resize
-(define-key evil-motion-state-map (kbd "C-S-<right>") (lambda () (interactive) (enlarge-window 10 t)))
-(define-key evil-motion-state-map (kbd "C-S-<left>")  (lambda () (interactive) (enlarge-window -10 t)))
-(define-key evil-motion-state-map (kbd "C-S-<up>")    (lambda () (interactive) (enlarge-window 10)))
-(define-key evil-motion-state-map (kbd "C-S-<down>")  (lambda () (interactive) (enlarge-window -10)))
+;; resize
+(define-key evil-motion-state-map (kbd "C-S-<left>")  'shrink-window-horizontally)
+(define-key evil-motion-state-map (kbd "C-S-<right>") 'enlarge-window-horizontally)
+(define-key evil-motion-state-map (kbd "C-S-<down>")  'shrink-window)
+(define-key evil-motion-state-map (kbd "C-S-<up>")    'enlarge-window)
+
+;;; init.el ends here.
