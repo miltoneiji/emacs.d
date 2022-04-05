@@ -333,15 +333,20 @@
 ;;;;;;;;;
 
 (use-package lsp-mode
-  :hook ((ruby-mode . lsp))
+  :hook ((ruby-mode . lsp)
+	 (scala-mode . lsp))
   :commands lsp
   :custom
   (lsp-restart 'auto-restart)
   (lsp-idle-delay 0.50)
   (lsp-log-io nil)
-  (lsp-completion-provider :capf))
+  (lsp-completion-provider :capf)
+  (lsp-prefer-flymake nil))
 
 (use-package lsp-ui)
+
+;; backends
+(use-package lsp-metals)
 
 ;;;;;;;;;;
 ;; Ruby ;;
