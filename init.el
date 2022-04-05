@@ -187,7 +187,7 @@
 ;;;;;;;;;;;;;;;;;;;;;
 
 (use-package yasnippet
-  :hook (prog-mode . #'yas-minor-mode))
+  :hook (prog-mode . yas-minor-mode))
 
 ;;;;;;;;;;
 ;; Font ;;
