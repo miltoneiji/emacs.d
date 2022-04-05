@@ -186,7 +186,8 @@
 ;; Template system ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
-(use-package yasnippet)
+(use-package yasnippet
+  :hook (prog-mode . #'yas-minor-mode))
 
 ;;;;;;;;;;
 ;; Font ;;
