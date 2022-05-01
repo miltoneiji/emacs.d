@@ -305,6 +305,13 @@
 			    (case-fn . downcase)))
   (deft-directory "/home/takamura/repos/notes"))
 
+;; Simple command that takes a URL from clipboard and inserts an org-mode link
+;; with a title of a page found by the URL into the current buffer.
+(use-package org-cliplink)
+
+;; This makes easier copying images.
+(use-package org-download)
+
 ;;;;;;;;;;;
 ;; Scala ;;
 ;;;;;;;;;;;
