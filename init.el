@@ -289,6 +289,21 @@
   :custom
   (org-bullets-bullet-list '("◉" "○")))
 
+(use-package deft
+  :config
+  (general-define-key :prefix "SPC"
+		      :states 'motion
+		      "q" '(deft :which-key "deft"))
+  :custom
+  (deft-extensions '("org"))
+  (deft-recursive t)
+  (deft-use-filename-as-title nil)
+  (deft-use-filter-string-for-filename t)
+  (deft-file-naming-rules '((noslash . "-")
+			    (nospace . "-")
+			    (case-fn . downcase)))
+  (deft-directory "/home/takamura/repos/notes"))
+
 ;;;;;;;;;;;
 ;; Scala ;;
 ;;;;;;;;;;;
