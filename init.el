@@ -299,6 +299,7 @@
   (deft-recursive t)
   (deft-use-filename-as-title nil)
   (deft-use-filter-string-for-filename t)
+  (deft-auto-save-interval 0)
   (deft-file-naming-rules '((noslash . "-")
 			    (nospace . "-")
 			    (case-fn . downcase)))
