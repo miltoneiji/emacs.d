@@ -270,7 +270,8 @@
     "e f" 'org-babel-execute-maybe
     "e b" 'org-babel-execute-buffer
     "'"   'org-edit-special
-    "c"   'org-babel-remove-result-one-or-many)
+    "c"   'org-babel-remove-result-one-or-many
+    "s"   'org-download-screenshot)
 
   (defun tk/org-mode-setup ()
     ;; disable automatic line breaking
@@ -286,6 +287,11 @@
     (org-indent-mode))
   :custom
   (org-ellipsis "...")
+
+  ;; inline images
+  (org-image-actual-width nil) ;; use #+ATTR_* attributes
+  (org-startup-with-inline-images t) ;; always show inline images
+
   (org-confirm-babel-evaluate nil)
   (org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "WAIT" "CODE-REVIEW" "HOLD" "|" "DONE" "DELEGATED" "CANCELLED")))
   ;; =M-x list-colors-display= to see colors
@@ -323,7 +329,11 @@
 (use-package org-cliplink)
 
 ;; This makes easier copying images.
-(use-package org-download)
+(use-package org-download
+  :custom
+  (org-download-image-dir "./images")
+  (org-download-heading-lvl nil)
+  (org-download-screenshot-method "flameshot gui --raw > %s"))
 
 ;;;;;;;;;;;
 ;; Scala ;;
@@ -543,6 +553,7 @@
                     "t" '(:ignore t :which-key "toggle")
                     "t t" '(tk/cycle-theme :which-key "Toggle theme")
                     "t r" '(toggle-truncate-lines :which-key "Toggle truncate lines")
+		    "t i" '(org-toggle-inline-images :which-key "org-toggle inline images")
                     "t l" '(display-line-numbers-mode :which-key "Toggle line number"))
 
 ;;;;;;;;;
