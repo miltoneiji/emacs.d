@@ -352,9 +352,17 @@
   (cider-repl-clear-buffer)
   (cider-switch-to-last-clojure-buffer))
 
+(defun tk/clojure-custom-indent ()
+  "Defines custom indent for Clojure."
+  (define-clojure-indent
+    (facts 1)
+    (fact 1)))
+
 (use-package clojure-mode)
 
 (use-package cider
+  :init
+  (add-hook 'cider-mode-hook #'tk/clojure-custom-indent)
   :custom
   (cider-repl-display-help-banner nil)
   :config
