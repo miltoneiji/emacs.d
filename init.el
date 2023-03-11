@@ -39,15 +39,6 @@
 (load-file "./.emacs.d/tk-defaults.el")
 (tk-defaults/use-all-settings)
 
-;; Get rid of the scroll jumpiness
-(setq scroll-step           1
-      scroll-conservatively 10000)
-
-;;;;;;;;;;
-;; Tabs ;;
-;;;;;;;;;;
-(setq indent-tabs-mode nil)
-
 ;; use-package setup
 ;; the =use-package= macro allows you to isolate package configuration in your
 ;; .emacs file in a way that is both performance-oriented and, well, tidy.
@@ -92,17 +83,15 @@
 
 (use-package evil-collection
   :config
-  (evil-collection-init 'dired)
-  (evil-collection-init 'ivy)
   (evil-collection-init 'magit))
 
 ;; Unbinding SPC since it will be used as a prefix
 (define-key evil-motion-state-map (kbd "SPC") nil)
 
 (general-create-definer map-local!
-  :states 'motion
+  :states  'motion
   :keymaps 'override
-  :prefix ",")
+  :prefix  ",")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project management ;;
@@ -123,31 +112,40 @@
                       "p l" '(projectile-discover-projects-in-search-path :which-key "Discover projects")
                       "p i" '(projectile-invalidate-cache :which-key "Invalidate cache")
                       "SPC" '(projectile-find-file :which-key "Find file")
-                      "p /" '(ag-project :which-key "Search")
+                      "p /" '(consult-ripgrep :which-key "Search")
 		      "p a" '(projectile-toggle-between-implementation-and-test :which-key "Test/Impl")
                       "p D" '(projectile-dired-other-window :which-key "Dired"))
   (tk/add-project-paths '("~/repos")))
 
-;;;;;;;;;;;;
-;; Search ;;
-;;;;;;;;;;;;
-
-(use-package ag
-  :custom
-  (ag-highlight-search t)
-  :config
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "s" '(:ignore t :which-key "search")
-                      "s p" '(ag-project :which-key "Search in project")
-                      "s P" '(ag-project-files :which-key "Search in project by filetype")
-                      "s s" '(ag :which-key "Search")
-                      "s S" '(ag-files :which-key "Search by filetype")
-                      "s k" '(ag-kill-buffers :which-key "Kill search buffers")))
-
 ;;;;;;;;;;;;;;;;;
-;;; completion ;;
+;;; Completion ;;
 ;;;;;;;;;;;;;;;;;
+
+(use-package vertico
+  :init
+  (vertico-mode))
+
+;; Marginalia adds annotations to the completion candidates.
+(use-package marginalia
+  :init
+  (marginalia-mode))
+
+;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist
+  :init
+  (savehist-mode))
+
+;; This package provides an orderless completion style that divides the pattern into
+;; space-separated components, and matches candidates that match all of the components
+;; in any order.
+(use-package orderless
+  :init
+  (setq completion-styles '(orderless basic)
+	completion-category-defaults nil
+	completion-category-overrides '((file (styles partial-completion)))))
+
+;; Provides search and navigation commands.
+(use-package consult)
 
 ;; text completion framework for Emacs. It uses pluggable back-ends and front-ends to retrieve
 ;; and display completion candidates.
@@ -155,17 +153,6 @@
   :hook ((after-init . global-company-mode))
   :custom
   (company-idle-delay 0))
-
-;; a generic completion mechanism for Emacs
-(use-package ivy
-  :init (ivy-mode)
-  :custom
-  (ivy-use-selectable-prompt t))
-
-;; a collection of Ivy-enhanced versions of common Emacs commands
-(use-package counsel
-  ;; Enabling =counsel-mode= remaps built-in Emacs funcions that have counsel replacement
-  :init (counsel-mode))
 
 ;; a minor mode that displays the key bindings following your currently entered incomplete
 ;; command in a popup.
@@ -181,13 +168,6 @@
   (which-key-max-display-columns nil)
   (which-key-min-display-lines 6)
   (which-key-side-window-slot -10))
-
-;;;;;;;;;;;;;;;;;;;;;
-;; Template system ;;
-;;;;;;;;;;;;;;;;;;;;;
-
-(use-package yasnippet
-  :hook (prog-mode . yas-minor-mode))
 
 ;;;;;;;;;;
 ;; Font ;;
@@ -207,32 +187,19 @@
 ;; Theme ;;
 ;;;;;;;;;;;
 
-(use-package modus-themes
+(use-package doom-themes
   :config
-  (load-theme 'modus-vivendi t))
+  (setq-default doom-themes-enable-bold t)
+  (setq-default doom-themes-enable-italic t)
+  (load-theme 'doom-one-light t)
 
-(setq tk/themes '(modus-vivendi modus-operandi))
-(setq tk/themes-index 0)
-
-(defun tk/cycle-theme ()
-  (interactive)
-  (setq tk/themes-index (% (1+ tk/themes-index) (length tk/themes)))
-  (tk/load-indexed-theme))
-
-(defun tk/load-indexed-theme ()
-  (tk/try-load-theme (nth tk/themes-index tk/themes)))
-
-(defun tk/try-load-theme (theme)
-  (if (ignore-errors (load-theme theme :no-confirm))
-      (mapcar #'disable-theme (remove theme custom-enabled-themes))
-    (message "Unable to find theme file for ‘%s’" theme)))
+  (doom-themes-org-config))
 
 ;;;;;;;;;;;;;;;
 ;; Mode line ;;
 ;;;;;;;;;;;;;;;
 
 (use-package mood-line
-  :straight (:host github :repo "miltoneiji/mood-line")
   :config
   (mood-line-mode))
 
@@ -293,53 +260,20 @@
   (org-startup-with-inline-images t) ;; always show inline images
 
   (org-confirm-babel-evaluate nil)
-  (org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "WAIT" "CODE-REVIEW" "HOLD" "|" "DONE" "DELEGATED" "CANCELLED")))
+  (org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "WAITING" "|" "DONE" "DELEGATED" "CANCELLED")))
   ;; =M-x list-colors-display= to see colors
   (org-todo-keyword-faces '(("TODO" . "chartreuse4")
                             ("IN-PROGRESS" . "green")
-                            ("WAIT" . "orange2")
-                            ("CODE-REVIEW" . "orange2")
-                            ("HOLD" . "firebrick3")
+                            ("WAITING" . "orange2")
                             ("DONE" . "dim gray"))))
+
+(use-package olivetti)
 
 ;; Pure asthetics
 (use-package org-bullets
   :hook (org-mode . (lambda () (org-bullets-mode 1)))
   :custom
   (org-bullets-bullet-list '("◉" "○")))
-
-(use-package deft
-  :config
-  (general-define-key :prefix "SPC"
-		      :states 'motion
-		      "q" '(deft :which-key "deft"))
-  :custom
-  (deft-extensions '("org"))
-  (deft-recursive t)
-  (deft-use-filename-as-title nil)
-  (deft-use-filter-string-for-filename t)
-  (deft-auto-save-interval 0)
-  (deft-file-naming-rules '((noslash . "-")
-			    (nospace . "-")
-			    (case-fn . downcase)))
-  (deft-directory "/home/takamura/repos/notes"))
-
-;; Simple command that takes a URL from clipboard and inserts an org-mode link
-;; with a title of a page found by the URL into the current buffer.
-(use-package org-cliplink)
-
-;; This makes easier copying images.
-(use-package org-download
-  :custom
-  (org-download-image-dir "./images")
-  (org-download-heading-lvl nil)
-  (org-download-screenshot-method "flameshot gui --raw > %s"))
-
-;;;;;;;;;;;
-;; Scala ;;
-;;;;;;;;;;;
-
-(use-package scala-mode)
 
 ;;;;;;;;;;;;;
 ;; Clojure ;;
@@ -353,7 +287,7 @@
   (cider-switch-to-last-clojure-buffer))
 
 (defun tk/clojure-custom-indent ()
-  "Defines custom indent for Clojure."
+  "Define custom indent for Clojure."
   (define-clojure-indent
     (facts 1)
     (fact 1)))
@@ -400,19 +334,6 @@
 
 (use-package lsp-ui)
 
-;; backends
-(use-package lsp-metals)
-
-;;;;;;;;;;
-;; Ruby ;;
-;;;;;;;;;;
-
-(use-package ruby-mode
-  :hook ((ruby-mode . (lambda ()
-			(set-fill-column 80)
-			(add-hook 'before-save-hook 'delete-trailing-whitespace)
-			(ruby-insert-encoding-magic-comment nil)))))
-
 ;;;;;;;;;;;
 ;; Elisp ;;
 ;;;;;;;;;;;
@@ -446,22 +367,12 @@
   (web-mode-enable-auto-pairing t)
   (web-mode-enable-css-colorization t))
 
-;;;;;;;;;;;;;;
-;; Protobuf ;;
-;;;;;;;;;;;;;;
-
-(use-package protobuf-mode)
-
-;;;;;;;;;;
-;; YAML ;;
-;;;;;;;;;;
-
-(use-package yaml-mode)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; misc ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package protobuf-mode)
+(use-package yaml-mode)
 (use-package smartparens
   :hook ((after-init . smartparens-global-mode))
   :config
@@ -476,6 +387,11 @@
 ;; Syntax checking
 (use-package flycheck
   :hook ((after-init . global-flycheck-mode)))
+
+;; This is used by some modes to initialize a file with some content.
+;; e.g. new files created in clojude-more starts with (ns ...)
+(use-package yasnippet
+  :hook (prog-mode . yas-minor-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Colors in compilation mode ;;
@@ -559,33 +475,17 @@
 (general-define-key :prefix "SPC"
                     :states 'motion
                     "t" '(:ignore t :which-key "toggle")
-                    "t t" '(tk/cycle-theme :which-key "Toggle theme")
                     "t r" '(toggle-truncate-lines :which-key "Toggle truncate lines")
-		    "t i" '(org-toggle-inline-images :which-key "org-toggle inline images")
                     "t l" '(display-line-numbers-mode :which-key "Toggle line number"))
-
-;;;;;;;;;
-;; Nix ;;
-;;;;;;;;;
-
-(use-package nix-mode
-  :mode "\\.nix\\'")
-
-;;;;;;;;;;;;
-;; Ledger ;;
-;;;;;;;;;;;;
-
-(use-package ledger-mode)
-
 ;;;;;;;;;;;;;
 ;; Windows ;;
 ;;;;;;;;;;;;;
 
 ;; resize
-(define-key evil-motion-state-map (kbd "C-S-<left>")  'shrink-window-horizontally)
-(define-key evil-motion-state-map (kbd "C-S-<right>") 'enlarge-window-horizontally)
-(define-key evil-motion-state-map (kbd "C-S-<down>")  'shrink-window)
-(define-key evil-motion-state-map (kbd "C-S-<up>")    'enlarge-window)
+(define-key evil-motion-state-map (kbd "C-S-h") 'shrink-window-horizontally)
+(define-key evil-motion-state-map (kbd "C-S-r") 'enlarge-window-horizontally)
+(define-key evil-motion-state-map (kbd "C-S-j") 'shrink-window)
+(define-key evil-motion-state-map (kbd "C-S-k") 'enlarge-window)
 
 ;;; init.el ends here.
 (custom-set-variables
@@ -593,6 +493,8 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644" default))
  '(ledger-reports
    '((nil "ledger ")
      ("bal" "%(binary) -f %(ledger-file) bal")

@@ -63,6 +63,15 @@ This ain't a typewriter."
   "I prefer."
   (global-set-key (kbd "<escape>") #'keyboard-escape-quit))
 
+(defun tk-defaults/get-rid-of-the-scroll-jumpiness ()
+  "Get rid of the scroll jumpiness."
+  (setq scroll-step           1
+        scroll-conservatively 10000))
+
+(defun tk-defaults/dont-indent-with-tabs ()
+  "Don't indent with tabs."
+  (setq indent-tabs-mode nil))
+
 (defun tk-defaults/use-all-settings ()
   "All tk-defaults."
   (tk-defaults/open-files-from-home-directory)
@@ -78,6 +87,8 @@ This ain't a typewriter."
   (tk-defaults/disable-gui-elements)
   (tk-defaults/show-column-number)
   (tk-defaults/quit-prompts-with-esc)
-  (tk-defaults/break-line-automatically-in-text-modes))
+  (tk-defaults/break-line-automatically-in-text-modes)
+  (tk-defaults/get-rid-of-the-scroll-jumpiness)
+  (tk-defaults/dont-indent-with-tabs))
 
 ;;; tk-defaults.el ends here
