@@ -2,20 +2,18 @@
 
 ;;; Commentary:
 
-;;; Make sure you have the =Hack= font installed.
-;;; Make sure you have =ag= and =fd= installed.
-
 ;;; =C-h= is your friend!
+
+;;; Dependencies:
+;;; - Hack font
+;;; - ripgrep for searching
+;;; - fd for searching for files
 
 ;;; Code:
 
 ;; Allow 100MB of memory before calling garbage collection. This means CG runs less often,
 ;; which speeds up some operations.
 (setq gc-cons-threshold (* 100 1024 1024))
-
-;; Increasing the amount of data which Emacs reads
-;; from the process. It increases the LSP performance
-(setq read-process-output-max (* 3 1024 1024)) ;; 3mb
 
 ;;; straight.el bootstrap
 (defvar bootstrap-version)
@@ -112,9 +110,7 @@
                       "p l" '(projectile-discover-projects-in-search-path :which-key "Discover projects")
                       "p i" '(projectile-invalidate-cache :which-key "Invalidate cache")
                       "SPC" '(projectile-find-file :which-key "Find file")
-                      "p /" '(consult-ripgrep :which-key "Search")
-		      "p a" '(projectile-toggle-between-implementation-and-test :which-key "Test/Impl")
-                      "p D" '(projectile-dired-other-window :which-key "Dired"))
+                      "p /" '(consult-ripgrep :which-key "Search"))
   (tk/add-project-paths '("~/repos")))
 
 ;;;;;;;;;;;;;;;;;
@@ -173,16 +169,6 @@
 ;; Font ;;
 ;;;;;;;;;;
 
-(defun tk/set-font ()
-  "Set the font according to the Operating System."
-  (set-face-attribute 'default nil :family "Hack")
-
-  (if (eq system-type 'gnu/linux)
-      (set-face-attribute 'default nil :height 135)
-    (set-face-attribute 'default nil :height 155)))
-
-(tk/set-font)
-
 ;;;;;;;;;;;
 ;; Theme ;;
 ;;;;;;;;;;;
@@ -195,9 +181,14 @@
 
   (doom-themes-org-config))
 
-;;;;;;;;;;;;;;;
-;; Mode line ;;
-;;;;;;;;;;;;;;;
+(defun tk/set-font ()
+  "Set the font according to the Operating System."
+  (set-face-attribute 'default nil :family "Hack")
+
+  (if (eq system-type 'gnu/linux)
+      (set-face-attribute 'default nil :height 135)
+    (set-face-attribute 'default nil :height 155)))
+(tk/set-font)
 
 (use-package mood-line
   :config
@@ -254,10 +245,6 @@
     (org-indent-mode))
   :custom
   (org-ellipsis "...")
-
-  ;; inline images
-  (org-image-actual-width nil) ;; use #+ATTR_* attributes
-  (org-startup-with-inline-images t) ;; always show inline images
 
   (org-confirm-babel-evaluate nil)
   (org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "WAITING" "|" "DONE" "DELEGATED" "CANCELLED")))
@@ -317,23 +304,6 @@
 			   (clj-refactor-mode 1)
 			   (yas-minor-mode 1)))))
 
-;;;;;;;;;
-;; LSP ;;
-;;;;;;;;;
-
-(use-package lsp-mode
-  :hook ((ruby-mode . lsp)
-	 (scala-mode . lsp))
-  :commands lsp
-  :custom
-  (lsp-restart 'auto-restart)
-  (lsp-idle-delay 0.50)
-  (lsp-log-io nil)
-  (lsp-completion-provider :capf)
-  (lsp-prefer-flymake nil))
-
-(use-package lsp-ui)
-
 ;;;;;;;;;;;
 ;; Elisp ;;
 ;;;;;;;;;;;
@@ -392,22 +362,6 @@
 ;; e.g. new files created in clojude-more starts with (ns ...)
 (use-package yasnippet
   :hook (prog-mode . yas-minor-mode))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Colors in compilation mode ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun tk/advice-compilation-filter (f proc string)
-  "F, PROC, STRING. Happy flycheck?"
-  (funcall f proc (if (string-prefix-p "*compilation" (buffer-name (process-buffer proc)))
-		      (xterm-color-filter string)
-		    string)))
-
-(use-package xterm-color
-  :custom
-  (compilation-environment '("TERM=xterm-256color"))
-  :config
-  (advice-add 'compilation-filter :around #'tk/advice-compilation-filter))
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Version control ;;
@@ -477,11 +431,11 @@
                     "t" '(:ignore t :which-key "toggle")
                     "t r" '(toggle-truncate-lines :which-key "Toggle truncate lines")
                     "t l" '(display-line-numbers-mode :which-key "Toggle line number"))
-;;;;;;;;;;;;;
-;; Windows ;;
-;;;;;;;;;;;;;
 
-;; resize
+;;;;;;;;;;;;;;;;;;;;;;
+;; Windows resizing ;;
+;;;;;;;;;;;;;;;;;;;;;;
+
 (define-key evil-motion-state-map (kbd "C-S-h") 'shrink-window-horizontally)
 (define-key evil-motion-state-map (kbd "C-S-r") 'enlarge-window-horizontally)
 (define-key evil-motion-state-map (kbd "C-S-j") 'shrink-window)
