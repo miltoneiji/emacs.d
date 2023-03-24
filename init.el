@@ -37,6 +37,8 @@
 (load-file "./.emacs.d/tk-defaults.el")
 (tk-defaults/use-all-settings)
 
+(add-to-list 'load-path (concat user-emacs-directory "modules/"))
+
 ;; use-package setup
 ;; the =use-package= macro allows you to isolate package configuration in your
 ;; .emacs file in a way that is both performance-oriented and, well, tidy.
@@ -90,6 +92,9 @@
   :states  'motion
   :keymaps 'override
   :prefix  ",")
+
+(require 'setup-clojure)
+(require 'setup-org-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project management ;;
@@ -165,10 +170,6 @@
   (which-key-min-display-lines 6)
   (which-key-side-window-slot -10))
 
-;;;;;;;;;;
-;; Font ;;
-;;;;;;;;;;
-
 ;;;;;;;;;;;
 ;; Theme ;;
 ;;;;;;;;;;;
@@ -177,17 +178,22 @@
   :config
   (setq-default doom-themes-enable-bold t)
   (setq-default doom-themes-enable-italic t)
-  (load-theme 'doom-one-light t)
+  (load-theme 'doom-one t)
 
   (doom-themes-org-config))
-
 (defun tk/set-font ()
-  "Set the font according to the Operating System."
-  (set-face-attribute 'default nil :family "Hack")
-
-  (if (eq system-type 'gnu/linux)
-      (set-face-attribute 'default nil :height 135)
-    (set-face-attribute 'default nil :height 155)))
+  "Set the font according to the Operating System.
+https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
+  (set-face-attribute 'default nil
+		      :family "Roboto Mono" :weight 'light :height 140)
+  (set-face-attribute 'bold nil
+		      :family "Roboto Mono" :weight 'regular)
+  (set-face-attribute 'italic nil
+		      :family "Victor Mono" :weight 'semilight :slant 'italic)
+  (set-fontset-font t 'unicode
+		    (font-spec :name "Inconsolata Light" :size 16) nil)
+  (set-fontset-font t '(#xe000 . #xffdd)
+		    (font-spec :name "Roboto Mono Nerd Font" :size 12) nil))
 (tk/set-font)
 
 (use-package mood-line
@@ -216,99 +222,12 @@
 (use-package treemacs-projectile)
 (use-package treemacs-magit)
 
-;;;;;;;;;
-;; Org ;;
-;;;;;;;;;
-
-(use-package org
-  :hook (org-mode . tk/org-mode-setup)
-  :config
-  (map-local! org-mode-map
-    "e"   '(:ignore t :which-key "eval")
-    "e f" 'org-babel-execute-maybe
-    "e b" 'org-babel-execute-buffer
-    "'"   'org-edit-special
-    "c"   'org-babel-remove-result-one-or-many
-    "s"   'org-download-screenshot)
-
-  (defun tk/org-mode-setup ()
-    ;; disable automatic line breaking
-    (auto-fill-mode 0)
-    ;;
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((emacs-lisp . t)
-       (sqlite . t)))
-    ;; wrap lines
-    (visual-line-mode t)
-    ;; indent text according to outline structure
-    (org-indent-mode))
-  :custom
-  (org-ellipsis "...")
-
-  (org-confirm-babel-evaluate nil)
-  (org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "WAITING" "|" "DONE" "DELEGATED" "CANCELLED")))
-  ;; =M-x list-colors-display= to see colors
-  (org-todo-keyword-faces '(("TODO" . "chartreuse4")
-                            ("IN-PROGRESS" . "green")
-                            ("WAITING" . "orange2")
-                            ("DONE" . "dim gray"))))
-
-(use-package olivetti)
-
-;; Pure asthetics
-(use-package org-bullets
-  :hook (org-mode . (lambda () (org-bullets-mode 1)))
-  :custom
-  (org-bullets-bullet-list '("◉" "○")))
-
-;;;;;;;;;;;;;
-;; Clojure ;;
-;;;;;;;;;;;;;
-
-(defun tk/clean-repl ()
-  "Cleans repl buffer without having to change to it."
-  (interactive)
-  (cider-switch-to-repl-buffer)
-  (cider-repl-clear-buffer)
-  (cider-switch-to-last-clojure-buffer))
-
-(defun tk/clojure-custom-indent ()
-  "Define custom indent for Clojure."
-  (define-clojure-indent
-    (facts 1)
-    (fact 1)))
-
-(use-package clojure-mode)
-
-(use-package cider
-  :init
-  (add-hook 'cider-mode-hook #'tk/clojure-custom-indent)
-  :custom
-  (cider-repl-display-help-banner nil)
-  :config
-  (map-local! clojure-mode-map
-    "a"   'cider-jack-in
-    "e"   '(:ignore t :which-key "eval")
-    "e f" 'cider-eval-defun-at-point
-    "e e" 'cider-eval-last-sexp
-    "e b" 'cider-eval-buffer
-    "r"   '(:ignore t :which-key "repl")
-    "r b" 'cider-switch-to-repl-buffer
-    "r c" 'tk/clean-repl
-    "t"   '(:ignore t :which-key "test")
-    "t t" 'cider-test-run-test))
-
-(use-package clj-refactor
-  :hook ((clojure-mode . (lambda ()
-			   (clj-refactor-mode 1)
-			   (yas-minor-mode 1)))))
-
 ;;;;;;;;;;;
 ;; Elisp ;;
 ;;;;;;;;;;;
 
 (add-hook 'emacs-lisp-mode-hook
+
 	  (lambda ()
 	    (map-local! emacs-lisp-mode-map
 	      "e"   '(:ignore t :which-key "eval")
@@ -341,6 +260,9 @@
 ;;; misc ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package markdown-mode
+  :custom
+  (markdown-hide-urls t))
 (use-package protobuf-mode)
 (use-package yaml-mode)
 (use-package smartparens
@@ -357,6 +279,23 @@
 ;; Syntax checking
 (use-package flycheck
   :hook ((after-init . global-flycheck-mode)))
+
+(use-package flycheck-aspell
+  :init
+  (setq ispell-dictionary "american")
+  (setq ispell-program-name "aspell")
+  (setq ispell-silently-savep t)
+  :config
+  (defun flycheck-maybe-recheck (_)
+    (when (bound-and-true-p flycheck-mode)
+      (flycheck-buffer)))
+  (advice-add #'ispell-pdict-save :after #'flycheck-maybe-recheck)
+
+  (flycheck-aspell-define-checker "org"
+    "Org" ("--add-filter" "url")
+    (org-mode))
+  (add-to-list 'flycheck-checkers 'org-aspell-dynamic)
+  (add-to-list 'flycheck-checkers 'markdown-aspell-dynamic))
 
 ;; This is used by some modes to initialize a file with some content.
 ;; e.g. new files created in clojude-more starts with (ns ...)
