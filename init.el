@@ -93,8 +93,11 @@
   :keymaps 'override
   :prefix  ",")
 
+(require 'setup-theme)
 (require 'setup-clojure)
-(require 'setup-org-mode)
+(require 'setup-org)
+(require 'setup-markdown)
+(require 'setup-other-key-bindings)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project management ;;
@@ -170,36 +173,6 @@
   (which-key-min-display-lines 6)
   (which-key-side-window-slot -10))
 
-;;;;;;;;;;;
-;; Theme ;;
-;;;;;;;;;;;
-
-(use-package doom-themes
-  :config
-  (setq-default doom-themes-enable-bold t)
-  (setq-default doom-themes-enable-italic t)
-  (load-theme 'doom-one t)
-
-  (doom-themes-org-config))
-(defun tk/set-font ()
-  "Set the font according to the Operating System.
-https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
-  (set-face-attribute 'default nil
-		      :family "Roboto Mono" :weight 'light :height 140)
-  (set-face-attribute 'bold nil
-		      :family "Roboto Mono" :weight 'regular)
-  (set-face-attribute 'italic nil
-		      :family "Victor Mono" :weight 'semilight :slant 'italic)
-  (set-fontset-font t 'unicode
-		    (font-spec :name "Inconsolata Light" :size 16) nil)
-  (set-fontset-font t '(#xe000 . #xffdd)
-		    (font-spec :name "Roboto Mono Nerd Font" :size 12) nil))
-(tk/set-font)
-
-(use-package mood-line
-  :config
-  (mood-line-mode))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; File and project explorer ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -260,9 +233,6 @@ https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
 ;;; misc ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package markdown-mode
-  :custom
-  (markdown-hide-urls t))
 (use-package protobuf-mode)
 (use-package yaml-mode)
 (use-package smartparens
@@ -370,15 +340,6 @@ https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
                     "t" '(:ignore t :which-key "toggle")
                     "t r" '(toggle-truncate-lines :which-key "Toggle truncate lines")
                     "t l" '(display-line-numbers-mode :which-key "Toggle line number"))
-
-;;;;;;;;;;;;;;;;;;;;;;
-;; Windows resizing ;;
-;;;;;;;;;;;;;;;;;;;;;;
-
-(define-key evil-motion-state-map (kbd "C-S-h") 'shrink-window-horizontally)
-(define-key evil-motion-state-map (kbd "C-S-r") 'enlarge-window-horizontally)
-(define-key evil-motion-state-map (kbd "C-S-j") 'shrink-window)
-(define-key evil-motion-state-map (kbd "C-S-k") 'enlarge-window)
 
 ;;; init.el ends here.
 (custom-set-variables

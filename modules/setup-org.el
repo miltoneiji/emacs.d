@@ -1,4 +1,4 @@
-;;; setup-org-mode.el -*- lexical-binding: t; -*-
+;;; setup-org.el -*- lexical-binding: t; -*-
 
 (use-package org
   :hook (org-mode . tk/org-mode-setup)
@@ -45,4 +45,4 @@
   (org-bullets-bullet-list '("◉" "○")))
 
 
-(provide 'setup-org-mode)
+(provide 'setup-org)
