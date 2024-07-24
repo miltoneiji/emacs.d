@@ -185,7 +185,7 @@
   "Set the font according to the Operating System.
 https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
   (set-face-attribute 'default nil
-		      :family "Roboto Mono" :weight 'light :height 140)
+		      :family "Roboto Mono" :weight 'light :height 190)
   (set-face-attribute 'bold nil
 		      :family "Roboto Mono" :weight 'regular)
   (set-face-attribute 'italic nil
