@@ -6,3 +6,5 @@
 org-roam.db
 .cache
 eln-cache/
+.DS_Store
+org-persist/
