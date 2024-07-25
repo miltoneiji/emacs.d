@@ -96,6 +96,14 @@
 (require 'setup-clojure)
 (require 'setup-org-mode)
 
+;;;;;;;;;;;;
+;; Python ;;
+;;;;;;;;;;;;
+
+(use-package python-mode
+  :custom
+  (python-shell-interpreter "python3.11"))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project management ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
