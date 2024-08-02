@@ -18,12 +18,15 @@
 ;;; straight.el bootstrap
 (defvar bootstrap-version)
 (let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 5))
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
         (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
          'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
@@ -96,13 +99,7 @@
 (require 'setup-clojure)
 (require 'setup-org-mode)
 
-;;;;;;;;;;;;
-;; Python ;;
-;;;;;;;;;;;;
 
-(use-package python-mode
-  :custom
-  (python-shell-interpreter "python3.11"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project management ;;
@@ -155,13 +152,6 @@
 
 ;; Provides search and navigation commands.
 (use-package consult)
-
-;; text completion framework for Emacs. It uses pluggable back-ends and front-ends to retrieve
-;; and display completion candidates.
-(use-package company
-  :hook ((after-init . global-company-mode))
-  :custom
-  (company-idle-delay 0))
 
 ;; a minor mode that displays the key bindings following your currently entered incomplete
 ;; command in a popup.
@@ -264,6 +254,32 @@ https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
   (web-mode-enable-auto-pairing t)
   (web-mode-enable-css-colorization t))
 
+;;;;;;;;;;;;;;;;;
+;; Development ;;
+;;;;;;;;;;;;;;;;;
+
+(use-package python-mode
+  :custom (python-shell-interpreter "python3.11"))
+
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :hook (python-mode . lsp))
+
+(use-package lsp-ui)
+
+;;(use-package elpy
+;; :init (elpy-enable))
+
+;; Syntax checking
+(use-package flycheck
+  :hook ((after-init . global-flycheck-mode)))
+
+;; For completion popups.
+(use-package company
+  :hook ((after-init . global-company-mode))
+  :custom
+  (company-idle-delay 0))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; misc ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -283,27 +299,6 @@ https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
                       "k s" '(sp-forward-slurp-sexp :which-key "slurp")
                       "k r" '(sp-raise-sexp :which-key "raise")
                       "k L" '(sp-forward-sexp :which-key "next expression")))
-
-;; Syntax checking
-(use-package flycheck
-  :hook ((after-init . global-flycheck-mode)))
-
-(use-package flycheck-aspell
-  :init
-  (setq ispell-dictionary "american")
-  (setq ispell-program-name "aspell")
-  (setq ispell-silently-savep t)
-  :config
-  (defun flycheck-maybe-recheck (_)
-    (when (bound-and-true-p flycheck-mode)
-      (flycheck-buffer)))
-  (advice-add #'ispell-pdict-save :after #'flycheck-maybe-recheck)
-
-  (flycheck-aspell-define-checker "org"
-    "Org" ("--add-filter" "url")
-    (org-mode))
-  (add-to-list 'flycheck-checkers 'org-aspell-dynamic)
-  (add-to-list 'flycheck-checkers 'markdown-aspell-dynamic))
 
 ;; This is used by some modes to initialize a file with some content.
 ;; e.g. new files created in clojude-more starts with (ns ...)
