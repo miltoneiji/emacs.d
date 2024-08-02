@@ -96,8 +96,12 @@
   :keymaps 'override
   :prefix  ",")
 
-(require 'setup-clojure)
-(require 'setup-org-mode)
+;;;;;;;;;;;;;
+;; Modules ;;
+;;;;;;;;;;;;;
+
+;;(require 'setup-clojure)
+;;(require 'setup-org-mode)
 
 
 
