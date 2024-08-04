@@ -47,7 +47,8 @@ Truncation is done up to `tk/modeline-string-truncate-length'."
       (list
        (tk/modeline-buffer-read-only-status)
        (propertize (tk/modeline-buffer-name)
-		   'face 'bold)))
+		   'face 'bold
+		   'help-echo (buffer-file-name))))
   "Mode line construct for identifying the buffer being displayed.")
 
 ;;;; Position in buffer

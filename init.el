@@ -2,13 +2,6 @@
 
 ;;; Commentary:
 
-;;; =C-h= is your friend!
-
-;;; Dependencies:
-;;; - Hack font
-;;; - ripgrep for searching
-;;; - fd for searching for files
-
 ;;; Code:
 
 ;; Allow 100MB of memory before calling garbage collection. This means CG runs less often,
@@ -110,6 +103,27 @@
                       "p /" '(consult-ripgrep :which-key "Search"))
   (tk/add-project-paths '("~/repos")))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; File and project explorer ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package treemacs
+  :hook ((treemacs-mode . (lambda() (display-line-numbers-mode -1))))
+  :custom
+  (treemacs-width 30)
+  (treemacs-show-hidden-files t)
+  (treemacs-resize-icons 22)
+  (treemacs-RET-actions-config treemacs-doubleclick-actions-config)
+  (treemacs-filewatch-mode t)
+  (treemacs-fringe-indicator-mode 'always)
+  (treemacs-no-png-images t)
+  :config
+  (general-define-key :prefix "SPC"
+                      :states 'motion
+                      "p t" '(treemacs :which-key "Toggle file explorer")))
+(use-package treemacs-evil)
+(use-package treemacs-projectile)
+
 ;;;;;;;;;;;;;;;;;
 ;;; Minibuffer ;;
 ;;;;;;;;;;;;;;;;;
@@ -142,7 +156,6 @@
   (setq completion-styles '(orderless basic)
 	completion-category-defaults nil
 	completion-category-overrides '((file (styles partial-completion)))))
-
 
 ;; a minor mode that displays the key bindings following your currently entered incomplete
 ;; command in a popup.
@@ -184,27 +197,6 @@
 (set-face-attribute 'default nil :font "Fira Code Retina" :height 200)
 (set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height 200)
 (set-face-attribute 'variable-pitch nil :font "Cantarell" :height 200)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; File and project explorer ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package treemacs
-  :hook ((treemacs-mode . (lambda() (display-line-numbers-mode -1))))
-  :custom
-  (treemacs-width 30)
-  (treemacs-show-hidden-files t)
-  (treemacs-resize-icons 22)
-  (treemacs-RET-actions-config treemacs-doubleclick-actions-config)
-  (treemacs-filewatch-mode t)
-  (treemacs-fringe-indicator-mode 'always)
-  (treemacs-no-png-images t)
-  :config
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "p t" '(treemacs :which-key "Toggle file explorer")))
-(use-package treemacs-evil)
-(use-package treemacs-projectile)
 
 ;;;;;;;;;;;
 ;; Elisp ;;
@@ -294,9 +286,9 @@
     "L" '(tk/ts-lint-project :which-key "Lint project")
     "F" '(tk/ts-format-project :which-key "Format project")))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; misc ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;
+;;; misc ;;
+;;;;;;;;;;;
 
 (use-package markdown-mode
   :custom
