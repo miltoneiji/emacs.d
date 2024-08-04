@@ -32,16 +32,6 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; core ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Loading my preferences
-(load-file "./.emacs.d/tk-defaults.el")
-(tk-defaults/use-all-settings)
-
-(add-to-list 'load-path (concat user-emacs-directory "modules/"))
-
 ;; use-package setup
 ;; the =use-package= macro allows you to isolate package configuration in your
 ;; .emacs file in a way that is both performance-oriented and, well, tidy.
@@ -58,6 +48,10 @@
 ;; This should be called as early as possible
 (use-package no-littering
   :config (require 'no-littering))
+
+(dolist (module '("preferences.el"
+		  "tk-modeline.el"))
+  (load (concat user-emacs-directory (format "modules/%s" module))))
 
 ;; ensure environmental variables inside Emacs look the same as in the user's shell
 (use-package exec-path-from-shell
@@ -84,9 +78,7 @@
   :custom
   (evil-escape-key-sequence "jk"))
 
-(use-package evil-collection
-  :config
-  (evil-collection-init 'magit))
+(use-package evil-collection)
 
 ;; Unbinding SPC since it will be used as a prefix
 (define-key evil-motion-state-map (kbd "SPC") nil)
@@ -95,15 +87,6 @@
   :states  'motion
   :keymaps 'override
   :prefix  ",")
-
-;;;;;;;;;;;;;
-;; Modules ;;
-;;;;;;;;;;;;;
-
-;;(require 'setup-clojure)
-;;(require 'setup-org-mode)
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project management ;;
@@ -128,17 +111,23 @@
   (tk/add-project-paths '("~/repos")))
 
 ;;;;;;;;;;;;;;;;;
-;;; Completion ;;
+;;; Minibuffer ;;
 ;;;;;;;;;;;;;;;;;
 
+;; Minimalistic vertical completion UI based on the default completion system.
 (use-package vertico
-  :init
-  (vertico-mode))
+  :init (vertico-mode))
 
-;; Marginalia adds annotations to the completion candidates.
+;; Adds annotations to the completion candidates.
 (use-package marginalia
+  :init (marginalia-mode))
+
+;; Preview, narrowing, grouping, search, etc.
+(use-package consult
   :init
-  (marginalia-mode))
+  (with-eval-after-load 'xref
+    (setq xref-show-xrefs-function #'consult-xref
+	  xref-show-definitions-function #'consult-xref)))
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
@@ -154,8 +143,6 @@
 	completion-category-defaults nil
 	completion-category-overrides '((file (styles partial-completion)))))
 
-;; Provides search and navigation commands.
-(use-package consult)
 
 ;; a minor mode that displays the key bindings following your currently entered incomplete
 ;; command in a popup.
@@ -176,31 +163,27 @@
 ;; Theme ;;
 ;;;;;;;;;;;
 
-(use-package doom-themes
+(use-package modus-themes
   :config
-  (setq-default doom-themes-enable-bold t)
-  (setq-default doom-themes-enable-italic t)
-  (load-theme 'doom-one t)
+  (setq modus-themes-to-toggle '(modus-vivendi modus-operandi)
+	;;modus-themes-to-toggle '(modus-vivendi-tinted modus-operandi-tinted)
+	;;modus-themes-to-toggle '(modus-vivendi-deuteranopia modus-operandi-deuteranopia)
+	;;modus-themes-to-toggle '(modus-vivendi-tritanopia modus-operandi-tritanopia)
+	modus-themes-bold-constructs nil
+	modus-themes-italic-constructs t)
+  (modus-themes-load-theme (car modus-themes-to-toggle))
 
-  (doom-themes-org-config))
-(defun tk/set-font ()
-  "Set the font according to the Operating System.
-https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
-  (set-face-attribute 'default nil
-		      :family "Roboto Mono" :weight 'light :height 190)
-  (set-face-attribute 'bold nil
-		      :family "Roboto Mono" :weight 'regular)
-  (set-face-attribute 'italic nil
-		      :family "Victor Mono" :weight 'semilight :slant 'italic)
-  (set-fontset-font t 'unicode
-		    (font-spec :name "Inconsolata Light" :size 16) nil)
-  (set-fontset-font t '(#xe000 . #xffdd)
-		    (font-spec :name "Roboto Mono Nerd Font" :size 12) nil))
-(tk/set-font)
+  (general-define-key :prefix "SPC"
+		      :states 'motion
+		      "t t" '(modus-themes-toggle :which-key "Toggle theme")))
 
-(use-package mood-line
-  :config
-  (mood-line-mode))
+;;;;;;;;;;
+;; Font ;;
+;;;;;;;;;;
+
+(set-face-attribute 'default nil :font "Fira Code Retina" :height 200)
+(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height 200)
+(set-face-attribute 'variable-pitch nil :font "Cantarell" :height 200)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; File and project explorer ;;
@@ -222,67 +205,94 @@ https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
                       "p t" '(treemacs :which-key "Toggle file explorer")))
 (use-package treemacs-evil)
 (use-package treemacs-projectile)
-(use-package treemacs-magit)
 
 ;;;;;;;;;;;
 ;; Elisp ;;
 ;;;;;;;;;;;
 
 (add-hook 'emacs-lisp-mode-hook
-
 	  (lambda ()
 	    (map-local! emacs-lisp-mode-map
 	      "e"   '(:ignore t :which-key "eval")
 	      "e e" 'eval-last-sexp
 	      "e b" 'eval-buffer)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Frontend development ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package web-mode
-  :init
-  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.hbs\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.jsx?\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.json\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.s?css\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.less\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.sass\\'" . web-mode))
-  :custom
-  (web-mode-markup-indent-offset 2)
-  (web-mode-attr-indent-offset 2)
-  (web-mode-css-indent-offset 2)
-  (web-mode-code-indent-offset 2)
-  (web-mode-enable-auto-pairing t)
-  (web-mode-enable-css-colorization t))
-
 ;;;;;;;;;;;;;;;;;
 ;; Development ;;
 ;;;;;;;;;;;;;;;;;
 
-(use-package python-mode
-  :custom (python-shell-interpreter "python3.11"))
+;; This is used by some modes to initialize a file with some content.
+;; e.g. new files created in clojude-more starts with (ns ...)
+(use-package yasnippet
+  :hook (prog-mode . yas-minor-mode))
+
+(add-hook 'prog-mode-hook 'hs-minor-mode)
+(general-define-key
+ :states 'normal
+ :keymaps 'hs-minor-mode-map
+ :prefix "SPC"
+ "h"   '(:ignore t :which-key "hide/show")
+ "h h" '(hs-hide-block :which-key "Hide block")
+ "h H" '(hs-hide-all :which-key "Hide all")
+ "h s" '(hs-show-block :which-key "Show block")
+ "h S" '(hs-show-all :which-key "Show all"))
 
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
-  :hook (python-mode . lsp))
+  :hook ((lsp-mode . (lambda ()
+		       (evil-local-set-key 'normal (kbd "g d") 'lsp-find-definition)
+		       (evil-local-set-key 'normal (kgd "g r") 'lsp-find-references))))
+  :config
+  (lsp-enable-which-key-integration))
 
-(use-package lsp-ui)
-
-;;(use-package elpy
-;; :init (elpy-enable))
+(use-package lsp-ui
+  :hook (lsp-mode . lsp-ui-mode)
+  :custom
+  (lsp-ui-doc-position 'bottom))
 
 ;; Syntax checking
-(use-package flycheck
-  :hook ((after-init . global-flycheck-mode)))
+(use-package flymake
+  :ensure nil
+  :hook (prog-mode . flymake-mode))
 
 ;; For completion popups.
 (use-package company
   :hook ((after-init . global-company-mode))
   :custom
   (company-idle-delay 0))
+
+(use-package python-mode
+  :custom (python-shell-interpreter "python3.11")
+  :hook (python-mode . lsp-deferred))
+
+(defun tk/ts-lint-buffer ()
+  (interactive)
+  (let ((command "npm run lint . ")
+	(current-file-path (buffer-file-name))
+	(default-directory "/Users/takamura/repos/comp/comp-app/"))
+    (compile (format "%s %s" command current-file-path))))
+
+(defun tk/ts-lint-project ()
+  (interactive)
+  (let ((command "npm run lint")
+	(default-directory "/Users/takamura/repos/comp/comp-app/"))
+    (compile command)))
+
+(defun tk/ts-format-project ()
+  (interactive)
+  (let ((command "npm run format")
+	(default-directory "/Users/takamura/repos/comp/comp-app/"))
+    (compile command)))
+
+(use-package typescript-mode
+  :mode "\\.tsx?\\'"
+  :hook ((typescript-mode . lsp-deferred))
+  :config
+  (setq typescript-indent-level 2)
+  (map-local! typescript-mode-map
+    "l" '(tk/ts-lint-buffer :which-key "Lint buffer")
+    "L" '(tk/ts-lint-project :which-key "Lint project")
+    "F" '(tk/ts-format-project :which-key "Format project")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; misc ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -291,8 +301,9 @@ https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
 (use-package markdown-mode
   :custom
   (markdown-hide-urls t))
-(use-package protobuf-mode)
+
 (use-package yaml-mode)
+
 (use-package smartparens
   :hook ((after-init . smartparens-global-mode))
   :config
@@ -304,11 +315,6 @@ https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
                       "k r" '(sp-raise-sexp :which-key "raise")
                       "k L" '(sp-forward-sexp :which-key "next expression")))
 
-;; This is used by some modes to initialize a file with some content.
-;; e.g. new files created in clojude-more starts with (ns ...)
-(use-package yasnippet
-  :hook (prog-mode . yas-minor-mode))
-
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Version control ;;
 ;;;;;;;;;;;;;;;;;;;;;
@@ -316,16 +322,6 @@ https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
 (use-package git-gutter-fringe
   :config
   (global-git-gutter-mode))
-
-(use-package magit
-  :config
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "g" '(:ignore t :which-key "git")
-                      "g b" '(magit-blame :which-key "Blame")
-                      "g l" '(magit-log-current :which-key "Log")
-                      "g L" '(magit-log-buffer-file :which-key "Log [for file]")
-                      "g s" '(magit-status :which-key "Status")))
 
 ;; revert buffers when their files/state have changed on disk
 (use-package autorevert
@@ -361,7 +357,7 @@ https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
 (general-define-key :prefix "SPC"
                     :states 'motion
                     "b" '(:ignore t :which-key "buffer")
-                    "b b" '(switch-to-buffer :which-key "Switch to buffer")
+                    "b b" '(consult-buffer :which-key "Switch to buffer")
                     "b d" '(kill-buffer :which-key "Kill buffer")
                     "b p" '(previous-buffer :which-key "Previous buffer")
                     "b n" '(next-buffer :which-key "Next buffer"))
@@ -377,6 +373,12 @@ https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
                     "t" '(:ignore t :which-key "toggle")
                     "t r" '(toggle-truncate-lines :which-key "Toggle truncate lines")
                     "t l" '(display-line-numbers-mode :which-key "Toggle line number"))
+
+(general-define-key :prefix "SPC"
+		    :states 'motion
+		    "s" '(:ignore t :which-key "search")
+		    "s l" '(consult-line :which-key "in file")
+		    "s p" '(consult-ripgrep :which-key "in project"))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows resizing ;;
@@ -394,7 +396,7 @@ https://www.reddit.com/r/emacs/comments/shzif1/n%CE%BBno_font_stack/"
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644" default))
+   '("013728cb445c73763d13e39c0e3fd52c06eefe3fbd173a766bfd29c6d040f100" "aec7b55f2a13307a55517fdf08438863d694550565dee23181d2ebd973ebd6b8" "d481904809c509641a1a1f1b1eb80b94c58c210145effc2631c1a7f2e4a2fdf4" "02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644" default))
  '(ledger-reports
    '((nil "ledger ")
      ("bal" "%(binary) -f %(ledger-file) bal")

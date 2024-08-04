@@ -1,7 +1,4 @@
-;;; tk-defaults.el --- Reasonable settings
-;;; Commentary:
-;; Personal defaults for Emacs.
-;;; Code:
+;;; preferences.el --- Reasonable settings
 
 (defun tk-defaults/open-files-from-home-directory ()
   "When opening a file, start searching at the user's home directory."
@@ -34,7 +31,7 @@ This ain't a typewriter."
   (setq initial-scratch-message nil))
 
 (defun tk-defaults/shorten-yes-or-no ()
-  "Don't ask 'yes/no?', ask 'y/n?'."
+  "Don't ask `yes/no?', ask `y/n?'."
   (fset 'yes-or-no-p 'y-or-n-p))
 
 (defun tk-defaults/break-line-automatically-in-text-modes ()
@@ -55,10 +52,6 @@ This ain't a typewriter."
   (tool-bar-mode -1)
   (scroll-bar-mode -1))
 
-(defun tk-defaults/show-column-number ()
-  "I also want to know in which column I am."
-  (setq column-number-mode t))
-
 (defun tk-defaults/quit-prompts-with-esc ()
   "I prefer."
   (global-set-key (kbd "<escape>") #'keyboard-escape-quit))
@@ -72,23 +65,18 @@ This ain't a typewriter."
   "Don't indent with tabs."
   (setq indent-tabs-mode nil))
 
-(defun tk-defaults/use-all-settings ()
-  "All tk-defaults."
-  (tk-defaults/open-files-from-home-directory)
-  (tk-defaults/delete-trailing-whitespace)
-  (tk-defaults/treat-camelcase-as-separate-words)
-  (tk-defaults/automatically-follow-symlinks)
-  (tk-defaults/single-space-after-periods)
-  (tk-defaults/ensure-that-files-end-with-newline)
-  (tk-defaults/quiet-startup)
-  (tk-defaults/shorten-yes-or-no)
-  (tk-defaults/show-matching-parens)
-  (tk-defaults/highlight-current-line)
-  (tk-defaults/disable-gui-elements)
-  (tk-defaults/show-column-number)
-  (tk-defaults/quit-prompts-with-esc)
-  (tk-defaults/break-line-automatically-in-text-modes)
-  (tk-defaults/get-rid-of-the-scroll-jumpiness)
-  (tk-defaults/dont-indent-with-tabs))
-
-;;; tk-defaults.el ends here
+(tk-defaults/open-files-from-home-directory)
+(tk-defaults/delete-trailing-whitespace)
+(tk-defaults/treat-camelcase-as-separate-words)
+(tk-defaults/automatically-follow-symlinks)
+(tk-defaults/single-space-after-periods)
+(tk-defaults/ensure-that-files-end-with-newline)
+(tk-defaults/quiet-startup)
+(tk-defaults/shorten-yes-or-no)
+(tk-defaults/show-matching-parens)
+(tk-defaults/highlight-current-line)
+(tk-defaults/disable-gui-elements)
+(tk-defaults/quit-prompts-with-esc)
+(tk-defaults/break-line-automatically-in-text-modes)
+(tk-defaults/get-rid-of-the-scroll-jumpiness)
+(tk-defaults/dont-indent-with-tabs)
