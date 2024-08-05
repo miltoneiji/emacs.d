@@ -13,11 +13,6 @@
 ;; TODO 2024-08-04: Test eglot instead of lsp-mode? It may be a bad idea
 ;; if I decide to use dap in the future...
 
-(eval-when-compile
-  ;; Following line is not needed if use-package.el is in ~/.emacs.d
-  (add-to-list 'load-path "<path where use-package is installed>")
-  (require 'use-package))
-
 ;; Keep ~/.emacs.d clean
 ;; This should be called as early as possible
 (use-package no-littering
@@ -41,54 +36,7 @@
       (exec-path-from-shell-initialize))))
 
 (use-package general
-  :ensure t
-  :config
-  (general-create-definer map-local!
-			  :states  'motion
-			  :keymaps 'override
-			  :prefix  ",")
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "f" '(:ignore t :which-key "file")
-                      "f f" '(find-file :which-key "Find file")
-                      "f p" '(tk/open-config :which-key "Open init.el")
-                      "f r" '(tk/load-config :which-key "Reload init.el"))
-
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "b" '(:ignore t :which-key "buffer")
-                      "b b" '(consult-buffer :which-key "Switch to buffer")
-                      "b d" '(kill-buffer :which-key "Kill buffer")
-                      "b p" '(previous-buffer :which-key "Previous buffer")
-                      "b n" '(next-buffer :which-key "Next buffer"))
-
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "u" '(:ignore t :which-key "util")
-                      "u g" '(straight-freeze-versions :which-key "Generate lockfile")
-                      "u e" '(straight-thaw-versions :which-key "Ensure lockfile"))
-
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "t" '(:ignore t :which-key "toggle")
-                      "t r" '(toggle-truncate-lines :which-key "Toggle truncate lines")
-                      "t l" '(display-line-numbers-mode :which-key "Toggle line number"))
-
-  (general-define-key :prefix "SPC"
-  		    :states 'motion
-  		    "s" '(:ignore t :which-key "search")
-  		    "s l" '(consult-line :which-key "in file")
-  		    "s p" '(consult-ripgrep :which-key "in project")
-  		    "s f" '(projectile-find-file :which-key "File")
-  		    "s F" '(tk/projectile-find-file-with-extension :which-key "File (ext)"))
-  (general-define-key :states 'normal
-		      :keymaps 'hs-minor-mode-map
-		      :prefix "SPC"
-		      "h"   '(:ignore t :which-key "hide/show")
-		      "h h" '(hs-hide-block :which-key "Hide block")
-		      "h H" '(hs-hide-all :which-key "Hide all")
-		      "h s" '(hs-show-block :which-key "Show block")
-		      "h S" '(hs-show-all :which-key "Show all")))
+  :ensure t)
 
 ;; evil
 (use-package evil
@@ -113,6 +61,11 @@
 
 ;; Unbinding SPC since it will be used as a prefix
 (define-key evil-motion-state-map (kbd "SPC") nil)
+
+(general-create-definer map-local!
+  :states  'motion
+  :keymaps 'override
+  :prefix  ",")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project management ;;
@@ -290,6 +243,15 @@
   :hook (prog-mode . yas-minor-mode))
 
 (add-hook 'prog-mode-hook 'hs-minor-mode)
+(general-define-key
+ :states 'normal
+ :keymaps 'hs-minor-mode-map
+ :prefix "SPC"
+ "h"   '(:ignore t :which-key "hide/show")
+ "h h" '(hs-hide-block :which-key "Hide block")
+ "h H" '(hs-hide-all :which-key "Hide all")
+ "h s" '(hs-show-block :which-key "Show block")
+ "h S" '(hs-show-all :which-key "Show all"))
 
 (use-package lsp-mode
   :ensure t
@@ -357,12 +319,12 @@
 ;;;;;;;;;;;
 
 (use-package markdown-mode
-  :ensure nil
+  :ensure t
   :custom
   (markdown-hide-urls t))
 
 (use-package yaml-mode
-  :ensure nil)
+  :ensure t)
 
 (use-package smartparens
   :ensure t
@@ -408,6 +370,41 @@
 (define-key evil-motion-state-map (kbd "SPC TAB") '("Previous" . evil-switch-to-windows-last-buffer))
 (define-key evil-motion-state-map (kbd "SPC :")   '("M-:" . execute-extended-command))
 (define-key evil-motion-state-map (kbd "SPC ;")   '("Eval expression" . pp-eval-expression))
+
+(general-define-key :prefix "SPC"
+                    :states 'motion
+                    "f" '(:ignore t :which-key "file")
+                    "f f" '(find-file :which-key "Find file")
+                    "f p" '(tk/open-config :which-key "Open init.el")
+                    "f r" '(tk/load-config :which-key "Reload init.el"))
+
+(general-define-key :prefix "SPC"
+                    :states 'motion
+                    "b" '(:ignore t :which-key "buffer")
+                    "b b" '(consult-buffer :which-key "Switch to buffer")
+                    "b d" '(kill-buffer :which-key "Kill buffer")
+                    "b p" '(previous-buffer :which-key "Previous buffer")
+                    "b n" '(next-buffer :which-key "Next buffer"))
+
+(general-define-key :prefix "SPC"
+                    :states 'motion
+                    "u" '(:ignore t :which-key "util")
+                    "u g" '(straight-freeze-versions :which-key "Generate lockfile")
+                    "u e" '(straight-thaw-versions :which-key "Ensure lockfile"))
+
+(general-define-key :prefix "SPC"
+                    :states 'motion
+                    "t" '(:ignore t :which-key "toggle")
+                    "t r" '(toggle-truncate-lines :which-key "Toggle truncate lines")
+                    "t l" '(display-line-numbers-mode :which-key "Toggle line number"))
+
+(general-define-key :prefix "SPC"
+		    :states 'motion
+		    "s" '(:ignore t :which-key "search")
+		    "s l" '(consult-line :which-key "in file")
+		    "s p" '(consult-ripgrep :which-key "in project")
+		    "s f" '(projectile-find-file :which-key "File")
+		    "s F" '(tk/projectile-find-file-with-extension :which-key "File (ext)"))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows resizing ;;
