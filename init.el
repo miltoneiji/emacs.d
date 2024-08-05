@@ -8,6 +8,11 @@
 ;; which speeds up some operations.
 (setq gc-cons-threshold (* 100 1024 1024))
 
+;; TODO 2024-08-04: Stop using straight? package.el works great too.
+
+;; TODO 2024-08-04: Test eglot instead of lsp-mode? It may be a bad idea
+;; if I decide to use dap in the future...
+
 ;;; straight.el bootstrap
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -90,9 +95,8 @@
           (seq-filter #'file-directory-p paths)))
 
 (use-package projectile
-  :init
-  (projectile-mode +1)
   :config
+  (projectile-mode +1)
   (general-define-key :prefix "SPC"
                       :states 'motion
                       "p" '(:ignore t :which-key "project")
@@ -102,6 +106,21 @@
                       "SPC" '(projectile-find-file :which-key "Find file")
                       "p /" '(consult-ripgrep :which-key "Search"))
   (tk/add-project-paths '("~/repos")))
+
+(defun tk/projectile-find-file-with-extension (extension)
+  "Return stuff using EXTENSION."
+  (interactive "sExtension (without dot): ")
+  (let* ((project-files (projectile-current-project-files))
+	 (filtered-files (seq-filter (lambda (file)
+				       (string-suffix-p (concat "." extension) file))
+				     project-files)))
+    filtered-files))
+
+
+;; TODO 2024-08-04: File search can be improved.
+;; - Search files with a specific extension.
+;; - Search files within a specific path
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; File and project explorer ;;
@@ -130,29 +149,42 @@
 
 ;; Minimalistic vertical completion UI based on the default completion system.
 (use-package vertico
-  :init (vertico-mode))
+  :config
+  (vertico-mode)
+  (keymap-set vertico-map "S-<up>" #'vertico-previous-group)
+  (keymap-set vertico-map "S-<down>" #'vertico-next-group))
 
 ;; Adds annotations to the completion candidates.
 (use-package marginalia
-  :init (marginalia-mode))
+  :config (marginalia-mode))
 
 ;; Preview, narrowing, grouping, search, etc.
 (use-package consult
-  :init
+  :config
   (with-eval-after-load 'xref
     (setq xref-show-xrefs-function #'consult-xref
 	  xref-show-definitions-function #'consult-xref)))
 
+(use-package embark
+  :bind (("C-." . embark-act))
+  :config
+  (add-to-list 'display-buffer-alist
+	       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+		 nil
+		 (window-parameters (mode-line-format . none)))))
+(use-package embark-consult
+  :hook (embark-collect-mode . consult-preview-at-point-mode))
+
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
-  :init
+  :config
   (savehist-mode))
 
 ;; This package provides an orderless completion style that divides the pattern into
 ;; space-separated components, and matches candidates that match all of the components
 ;; in any order.
 (use-package orderless
-  :init
+  :config
   (setq completion-styles '(orderless basic)
 	completion-category-defaults nil
 	completion-category-overrides '((file (styles partial-completion)))))
@@ -160,9 +192,8 @@
 ;; a minor mode that displays the key bindings following your currently entered incomplete
 ;; command in a popup.
 (use-package which-key
-  :init
-  (which-key-mode)
   :config
+  (which-key-mode)
   (which-key-setup-side-window-bottom)
   :custom
   (which-key-sort-order #'which-key-key-order-alpha)
@@ -233,7 +264,7 @@
   :commands (lsp lsp-deferred)
   :hook ((lsp-mode . (lambda ()
 		       (evil-local-set-key 'normal (kbd "g d") 'lsp-find-definition)
-		       (evil-local-set-key 'normal (kgd "g r") 'lsp-find-references))))
+		       (evil-local-set-key 'normal (kbd "g r") 'lsp-find-references))))
   :config
   (lsp-enable-which-key-integration))
 
@@ -377,7 +408,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 
 (define-key evil-motion-state-map (kbd "C-S-h") 'shrink-window-horizontally)
-(define-key evil-motion-state-map (kbd "C-S-r") 'enlarge-window-horizontally)
+(define-key evil-motion-state-map (kbd "C-S-l") 'enlarge-window-horizontally)
 (define-key evil-motion-state-map (kbd "C-S-j") 'shrink-window)
 (define-key evil-motion-state-map (kbd "C-S-k") 'enlarge-window)
 
