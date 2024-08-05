@@ -13,34 +13,55 @@
 ;; TODO 2024-08-04: Test eglot instead of lsp-mode? It may be a bad idea
 ;; if I decide to use dap in the future...
 
+;;; straight.el bootstrap
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+;; use-package setup
+;; the =use-package= macro allows you to isolate package configuration in your
+;; .emacs file in a way that is both performance-oriented and, well, tidy.
+;;
+;; - when using =:hook= omit the "-hook" suffix.
+;; - use =:init= to execute code before a package is loaded (so, this will run
+;;   even if the package is deferred).
+;; - use =:config= to execute code after a package is loaded.
+(straight-use-package 'use-package)
+;; avoid having to add :straight t in all use-package statements
+(setq straight-use-package-by-default t)
+
 ;; Keep ~/.emacs.d clean
 ;; This should be called as early as possible
 (use-package no-littering
-  :ensure t
   :config (require 'no-littering))
 
-;; TODO 2024-08-05: Is this the right place to load modules?.
-
 (dolist (module '("preferences.el"
-		  "tk-modeline.el"
-		  ;;"org-mode.el"
-		  ))
+		  "tk-modeline.el"))
   (load (concat user-emacs-directory (format "modules/%s" module))))
 
 ;; ensure environmental variables inside Emacs look the same as in the user's shell
 (use-package exec-path-from-shell
-  :ensure t
   :config
   (progn
     (when (memq window-system '(mac ns x))
       (exec-path-from-shell-initialize))))
 
-(use-package general
-  :ensure t)
+(use-package general)
 
 ;; evil
 (use-package evil
-  :ensure t
   :config
   (evil-mode 1)
   :custom
@@ -50,14 +71,12 @@
   (evil-want-keybinding nil))
 
 (use-package evil-escape
-  :ensure t
   :config
   (evil-escape-mode 1)
   :custom
   (evil-escape-key-sequence "jk"))
 
-(use-package evil-collection
-  :ensure t)
+(use-package evil-collection)
 
 ;; Unbinding SPC since it will be used as a prefix
 (define-key evil-motion-state-map (kbd "SPC") nil)
@@ -76,7 +95,6 @@
           (seq-filter #'file-directory-p paths)))
 
 (use-package projectile
-  :ensure t
   :config
   (projectile-mode +1)
   (general-define-key :prefix "SPC"
@@ -96,18 +114,19 @@
 	 (filtered-files (seq-filter (lambda (file)
 				       (string-suffix-p (concat "." extension) file))
 				     project-files)))
-    (find-file (completing-read "File: " filtered-files))))
+    filtered-files))
+
 
 ;; TODO 2024-08-04: File search can be improved.
 ;; - Search files with a specific extension.
 ;; - Search files within a specific path
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; File and project explorer ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package treemacs
-  :ensure t
   :hook ((treemacs-mode . (lambda() (display-line-numbers-mode -1))))
   :custom
   (treemacs-width 30)
@@ -121,10 +140,8 @@
   (general-define-key :prefix "SPC"
                       :states 'motion
                       "p t" '(treemacs :which-key "Toggle file explorer")))
-(use-package treemacs-evil
-  :ensure t)
-(use-package treemacs-projectile
-  :ensure t)
+(use-package treemacs-evil)
+(use-package treemacs-projectile)
 
 ;;;;;;;;;;;;;;;;;
 ;;; Minibuffer ;;
@@ -132,7 +149,6 @@
 
 ;; Minimalistic vertical completion UI based on the default completion system.
 (use-package vertico
-  :ensure t
   :config
   (vertico-mode)
   (keymap-set vertico-map "S-<up>" #'vertico-previous-group)
@@ -140,19 +156,16 @@
 
 ;; Adds annotations to the completion candidates.
 (use-package marginalia
-  :ensure t
   :config (marginalia-mode))
 
 ;; Preview, narrowing, grouping, search, etc.
 (use-package consult
-  :ensure t
   :config
   (with-eval-after-load 'xref
     (setq xref-show-xrefs-function #'consult-xref
 	  xref-show-definitions-function #'consult-xref)))
 
 (use-package embark
-  :ensure t
   :bind (("C-." . embark-act))
   :config
   (add-to-list 'display-buffer-alist
@@ -160,12 +173,10 @@
 		 nil
 		 (window-parameters (mode-line-format . none)))))
 (use-package embark-consult
-  :ensure t
   :hook (embark-collect-mode . consult-preview-at-point-mode))
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
-  :ensure t
   :config
   (savehist-mode))
 
@@ -173,7 +184,6 @@
 ;; space-separated components, and matches candidates that match all of the components
 ;; in any order.
 (use-package orderless
-  :ensure t
   :config
   (setq completion-styles '(orderless basic)
 	completion-category-defaults nil
@@ -182,7 +192,6 @@
 ;; a minor mode that displays the key bindings following your currently entered incomplete
 ;; command in a popup.
 (use-package which-key
-  :ensure t
   :config
   (which-key-mode)
   (which-key-setup-side-window-bottom)
@@ -199,7 +208,6 @@
 ;;;;;;;;;;;
 
 (use-package modus-themes
-  :ensure t
   :config
   (setq modus-themes-to-toggle '(modus-vivendi modus-operandi)
 	;;modus-themes-to-toggle '(modus-vivendi-tinted modus-operandi-tinted)
@@ -239,7 +247,6 @@
 ;; This is used by some modes to initialize a file with some content.
 ;; e.g. new files created in clojude-more starts with (ns ...)
 (use-package yasnippet
-  :ensure t
   :hook (prog-mode . yas-minor-mode))
 
 (add-hook 'prog-mode-hook 'hs-minor-mode)
@@ -254,7 +261,6 @@
  "h S" '(hs-show-all :which-key "Show all"))
 
 (use-package lsp-mode
-  :ensure t
   :commands (lsp lsp-deferred)
   :hook ((lsp-mode . (lambda ()
 		       (evil-local-set-key 'normal (kbd "g d") 'lsp-find-definition)
@@ -263,7 +269,6 @@
   (lsp-enable-which-key-integration))
 
 (use-package lsp-ui
-  :ensure t
   :hook (lsp-mode . lsp-ui-mode)
   :custom
   (lsp-ui-doc-position 'bottom))
@@ -280,7 +285,6 @@
   (company-idle-delay 0))
 
 (use-package python-mode
-  :ensure nil
   :custom (python-shell-interpreter "python3.11")
   :hook (python-mode . lsp-deferred))
 
@@ -304,7 +308,6 @@
     (compile command)))
 
 (use-package typescript-mode
-  :ensure t
   :mode "\\.tsx?\\'"
   :hook ((typescript-mode . lsp-deferred))
   :config
@@ -319,15 +322,12 @@
 ;;;;;;;;;;;
 
 (use-package markdown-mode
-  :ensure t
   :custom
   (markdown-hide-urls t))
 
-(use-package yaml-mode
-  :ensure t)
+(use-package yaml-mode)
 
 (use-package smartparens
-  :ensure t
   :hook ((after-init . smartparens-global-mode))
   :config
   (require 'smartparens-config)
@@ -343,13 +343,12 @@
 ;;;;;;;;;;;;;;;;;;;;;
 
 (use-package git-gutter-fringe
-  :ensure t
   :config
   (global-git-gutter-mode))
 
 ;; revert buffers when their files/state have changed on disk
 (use-package autorevert
-  :ensure nil
+  :straight (:type built-in)
   :hook (after-init . global-auto-revert-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -402,9 +401,7 @@
 		    :states 'motion
 		    "s" '(:ignore t :which-key "search")
 		    "s l" '(consult-line :which-key "in file")
-		    "s p" '(consult-ripgrep :which-key "in project")
-		    "s f" '(projectile-find-file :which-key "File")
-		    "s F" '(tk/projectile-find-file-with-extension :which-key "File (ext)"))
+		    "s p" '(consult-ripgrep :which-key "in project"))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows resizing ;;
@@ -414,3 +411,24 @@
 (define-key evil-motion-state-map (kbd "C-S-l") 'enlarge-window-horizontally)
 (define-key evil-motion-state-map (kbd "C-S-j") 'shrink-window)
 (define-key evil-motion-state-map (kbd "C-S-k") 'enlarge-window)
+
+;;; init.el ends here.
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("013728cb445c73763d13e39c0e3fd52c06eefe3fbd173a766bfd29c6d040f100" "aec7b55f2a13307a55517fdf08438863d694550565dee23181d2ebd973ebd6b8" "d481904809c509641a1a1f1b1eb80b94c58c210145effc2631c1a7f2e4a2fdf4" "02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644" default))
+ '(ledger-reports
+   '((nil "ledger ")
+     ("bal" "%(binary) -f %(ledger-file) bal")
+     ("reg" "%(binary) -f %(ledger-file) reg")
+     ("payee" "%(binary) -f %(ledger-file) reg @%(payee)")
+     ("account" "%(binary) -f %(ledger-file) reg %(account)"))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
