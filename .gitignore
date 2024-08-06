@@ -8,3 +8,4 @@ org-roam.db
 eln-cache/
 .DS_Store
 org-persist/
+elpa/
