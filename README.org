@@ -1,0 +1,40 @@
+#+TITLE: Takamura's emacs.d
+
+* Cheat sheet
+** use-package
+- ~:init~: evaluate some Lisp before package is loaded.
+- ~:config~: evaluate some Lisp after package is loaded.
+
+You should try to set things up so that packages are only loaded when
+they are actually needed (a.k.a. "autoloading").
+
+- ~:defer t~ will avoid loading the package. The package will be
+  loaded when you run any autoloaded command from the package. (Which
+  commands from a package are marked to auto-load by default is the
+  decision of the package authors.)
+- To provide your own autoloads, you can use the ~:commands~ keyword.
+
+  #+BEGIN_SRC elisp
+    (use-package color-moccur
+      ;; the commands below are set as autoloaded
+      :commands (isearch-moccur isearch-all)
+      :bind (("M-s O" . moccur)
+    	 :map isearch-mode-map
+    	 ("M-o" . isearch-moccur)
+    	 ("M-O" . isearch-moccur-all)))
+  #+END_SRC
+
+
+Before ~use-package~ can load a package, it must be available in a
+directory in your ~load-path~. ~use-package~ can interface with
+~package.el~ to install packages on Emacs start.
+
+- ~:ensure t~: makes ~use-package~ ask the Emacs package manager to
+  install a package if it is not already present on your system.
+- ~:ensure nil~: do not install the package (usually because it is
+  already part of Emacs).
+- ~(require 'use-package-ensure') (setq use-package-always-ensure t)~
+  to use ~:ensure t~ as default.
+- Check the value of ~package-archives~ so that you know the known
+  repositories that you are searching in. ELPA (gnu and nongnu) are
+  usually the default. But you probably want to include MELPA as well.
