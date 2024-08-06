@@ -108,13 +108,13 @@
   (tk/add-project-paths '("~/repos")))
 
 (defun tk/projectile-find-file-with-extension (extension)
-  "Return stuff using EXTENSION."
+  "Return files with EXTENSION within the current project."
   (interactive "sExtension (without dot): ")
   (let* ((project-files (projectile-current-project-files))
 	 (filtered-files (seq-filter (lambda (file)
 				       (string-suffix-p (concat "." extension) file))
 				     project-files)))
-    filtered-files))
+    (find-file (completing-read "File: " filtered-files))))
 
 
 ;; TODO 2024-08-04: File search can be improved.
@@ -401,7 +401,9 @@
 		    :states 'motion
 		    "s" '(:ignore t :which-key "search")
 		    "s l" '(consult-line :which-key "in file")
-		    "s p" '(consult-ripgrep :which-key "in project"))
+		    "s p" '(consult-ripgrep :which-key "in project")
+		    "s f" '(projectile-find-file :which-key "file")
+		    "s F" '(tk/projectile-find-file-with-extension :which-key "file with extension"))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows resizing ;;
