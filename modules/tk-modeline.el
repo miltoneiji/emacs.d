@@ -141,7 +141,7 @@ Specific to the current window's mode line.")
 		tk/modeline-position-in-buffer
 		tk/modeline-major-mode
 		mode-line-format-right-align
-		tk/modeline-vc-branch
+		;;tk/modeline-vc-branch
 		" "
 		tk/modeline-flymake
 		" "))

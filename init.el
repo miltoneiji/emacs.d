@@ -4,9 +4,6 @@
 
 ;;; Code:
 
-;; TODO 2024-08-04: Test eglot instead of lsp-mode? It may be a bad idea
-;; if I decide to use dap in the future...
-
 ;; Packages
 (require 'package)
 
@@ -78,6 +75,8 @@
     "Add PATHS to projectile projects path if they exist."
     (setq projectile-project-search-path
           (seq-filter #'file-directory-p paths)))
+
+;; TODO 2024-08-06: Try using Emacs's default project manager?
 
 (use-package projectile
   :ensure t
@@ -259,24 +258,34 @@
  "h s" '(hs-show-block :which-key "Show block")
  "h S" '(hs-show-all :which-key "Show all"))
 
-(use-package lsp-mode
-  :ensure t
-  :commands (lsp lsp-deferred)
-  :hook ((lsp-mode . (lambda ()
-		       (evil-local-set-key 'normal (kbd "g d") 'lsp-find-definition)
-		       (evil-local-set-key 'normal (kbd "g r") 'lsp-find-references))))
-  :config
-  (lsp-enable-which-key-integration))
+;;(use-package lsp-mode
+;;  :ensure t
+;;  :commands (lsp lsp-deferred)
+;;  :hook ((lsp-mode . (lambda ()
+;;		       (evil-local-set-key 'normal (kbd "g d") 'lsp-find-definition)
+;;		       (evil-local-set-key 'normal (kbd "g r") 'lsp-find-references))))
+;;  :config
+;;  (lsp-enable-which-key-integration))
+;;
+;;(use-package lsp-ui
+;;  :ensure t
+;;  :hook (lsp-mode . lsp-ui-mode)
+;;  :custom
+;;  (lsp-ui-doc-position 'bottom))
 
-(use-package lsp-ui
-  :ensure t
-  :hook (lsp-mode . lsp-ui-mode)
-  :custom
-  (lsp-ui-doc-position 'bottom))
+(use-package eglot
+  :ensure nil
+  :hook
+  (python-mode . eglot-ensure)
+  (typescript-mode . eglot-ensure)
+  (eglot-managed-mode . (lambda ()
+			  (evil-local-set-key 'normal (kbd "g d") 'xref-find-definitions)
+			  (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)))
+  :config
+  (add-to-list 'eglot-server-programs '(python-mode . ("pyright-langserver" "--stdio"))))
 
 ;; Syntax checking
 (use-package flymake
-  :ensure t
   :ensure nil
   :hook (prog-mode . flymake-mode))
 
@@ -288,9 +297,10 @@
   (company-idle-delay 0))
 
 (use-package python-mode
-  :ensure nil
-  :custom (python-shell-interpreter "python3.11")
-  :hook (python-mode . lsp-deferred))
+  :ensure t
+  :custom
+  (python-shell-interpreter "python3.11")
+  (python-indent-offset 4))
 
 (defun tk/ts-lint-buffer ()
   (interactive)
@@ -314,7 +324,7 @@
 (use-package typescript-mode
   :ensure t
   :mode "\\.tsx?\\'"
-  :hook ((typescript-mode . lsp-deferred))
+  ;;:hook ((typescript-mode . lsp-deferred))
   :config
   (setq typescript-indent-level 2)
   (map-local! typescript-mode-map
