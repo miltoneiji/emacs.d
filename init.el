@@ -11,10 +11,7 @@
 ;; TODO 2024-08-04: Test eglot instead of lsp-mode? It may be a bad idea
 ;; if I decide to use dap in the future...
 
-;;;;;;;;;;;;;;;;;;
-;;;; Packages ;;;;
-;;;;;;;;;;;;;;;;;;
-
+;; Packages
 (require 'package)
 
 (setq package-archives
@@ -28,10 +25,11 @@
 	("nongnu" . 1)))
 
 ;; Keep ~/.emacs.d clean
-;; This should be called as early as possible
 (use-package no-littering
   :ensure t
-  :config (require 'no-littering))
+  :config
+  (setq auto-save-file-name-transforms
+	`((".*" ,(no-littering-expand-var-file-name "auto-save/")))))
 
 (dolist (module '("preferences.el"
 		  "tk-modeline.el"))
