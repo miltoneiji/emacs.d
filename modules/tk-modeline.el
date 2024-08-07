@@ -80,8 +80,9 @@ Truncation is done up to `tk/modeline-string-truncate-length'."
 
 (defvar-local tk/modeline-vc-branch
     '(:eval
-      (if (mode-line-window-selected-p)
-	  (propertize (tk/modeline--vc-branch-name (buffer-file-name)))))
+      (if-let ((curr-window (mode-line-window-selected-p))
+	       (branch (tk/modeline--vc-branch-name (buffer-file-name))))
+	  (propertize branch)))
   "Mode line construct to return propertized VC branch.")
 
 ;;;; Flymake
@@ -141,7 +142,7 @@ Specific to the current window's mode line.")
 		tk/modeline-position-in-buffer
 		tk/modeline-major-mode
 		mode-line-format-right-align
-		;;tk/modeline-vc-branch
+		tk/modeline-vc-branch
 		" "
 		tk/modeline-flymake
 		" "))
