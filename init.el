@@ -4,10 +4,6 @@
 
 ;;; Code:
 
-;; Allow 100MB of memory before calling garbage collection. This means CG runs less often,
-;; which speeds up some operations.
-(setq gc-cons-threshold (* 100 1024 1024))
-
 ;; TODO 2024-08-04: Test eglot instead of lsp-mode? It may be a bad idea
 ;; if I decide to use dap in the future...
 
