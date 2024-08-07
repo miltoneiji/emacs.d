@@ -301,7 +301,11 @@
   :ensure t
   :custom
   (python-shell-interpreter "python3.11")
-  (python-indent-offset 4))
+  (python-indent-offset 4)
+  :config
+  (define-key python-mode-map (kbd "SPC n d") '("def" . py-narrow-to-def))
+  (define-key python-mode-map (kbd "SPC n l") '("block" . py-narrow-to-block))
+  (define-key python-mode-map (kbd "SPC n c") '("class" . py-narrow-to-class)))
 
 (defun tk/ts-lint-buffer ()
   (interactive)
@@ -424,6 +428,12 @@
                     "s p" '(consult-ripgrep :which-key "in project")
                     "s f" '(projectile-find-file :which-key "file")
                     "s F" '(tk/projectile-find-file-with-extension :which-key "file with extension"))
+
+(general-define-key :prefix "SPC"
+                    :states 'motion
+                    "n" '(:ignore t :which-key "narrowing")
+                    "n r" '(narrow-to-region :which-key "region")
+                    "n q" '(widen :which-key "quit narrowing"))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows resizing ;;
