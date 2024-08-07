@@ -11,9 +11,9 @@ Check if the `window-width' or `window-height' is less than
 `split-width-threshold' and `split-height-threshold',
 respectively."
   (or (and (numberp split-width-threshold)
-	   (< (window-total-width) split-width-threshold))
+           (< (window-total-width) split-width-threshold))
       (and (numberp split-height-threshold)
-	   (< (window-total-height) split-height-threshold))))
+           (< (window-total-height) split-height-threshold))))
 
 (defun tk/modeline--string-truncate-p (str)
   "Return non-nil if STR should be truncated."
@@ -39,7 +39,7 @@ Truncation is done up to `tk/modeline-string-truncate-length'."
 (defun tk/modeline-buffer-name ()
   "Return `buffer-name', truncating it if necessary."
   (when-let ((name (buffer-name)))
-    ;(format " %s" (tk/modeline-string-truncate name))
+                                        ;(format " %s" (tk/modeline-string-truncate name))
     name))
 
 (defvar-local tk/modeline-buffer-identification
@@ -47,8 +47,8 @@ Truncation is done up to `tk/modeline-string-truncate-length'."
       (list
        (tk/modeline-buffer-read-only-status)
        (propertize (tk/modeline-buffer-name)
-		   'face 'bold
-		   'help-echo (buffer-file-name))))
+                   'face 'bold
+                   'help-echo (buffer-file-name))))
   "Mode line construct for identifying the buffer being displayed.")
 
 ;;;; Position in buffer
@@ -56,7 +56,7 @@ Truncation is done up to `tk/modeline-string-truncate-length'."
 (defvar-local tk/modeline-position-in-buffer
     '(:eval
       (if (mode-line-window-selected-p)
-	  " [%l,%c]")))
+          " [%l,%c]")))
 
 ;;;; Major mode
 
@@ -67,22 +67,22 @@ Truncation is done up to `tk/modeline-string-truncate-length'."
 (defvar-local tk/modeline-major-mode
     '(:eval
       (if (mode-line-window-selected-p)
-	  (propertize (tk/modeline-major-mode-name)))))
+          (propertize (tk/modeline-major-mode-name)))))
 
 ;;;; VC branch
 (defun tk/modeline--vc-branch-name (file)
   "Return VC branch name for FILE if it exits, else return empty."
   (when-let ((backend (vc-backend file))
-	     (rev (vc-working-revision file backend))
-	     (branch (or (vc-git--symbolic-ref file)
-			 (substring rev 0 7))))
+             (rev (vc-working-revision file backend))
+             (branch (or (vc-git--symbolic-ref file)
+                         (substring rev 0 7))))
     (format " [%s]" branch)))
 
 (defvar-local tk/modeline-vc-branch
     '(:eval
       (if-let ((curr-window (mode-line-window-selected-p))
-	       (branch (tk/modeline--vc-branch-name (buffer-file-name))))
-	  (propertize branch)))
+               (branch (tk/modeline--vc-branch-name (buffer-file-name))))
+          (propertize branch)))
   "Mode line construct to return propertized VC branch.")
 
 ;;;; Flymake
@@ -94,8 +94,8 @@ TYPE is usually keyword `:error', `:warning' or `:note'."
   (let ((count 0))
     (dolist (d (flymake-diagnostics))
       (when (= (flymake--severity type)
-	       (flymake--severity (flymake-diagnostic-type d)))
-	(cl-incf count)))
+               (flymake--severity (flymake-diagnostic-type d)))
+        (cl-incf count)))
     (when (cl-plusp count)
       (number-to-string count))))
 
@@ -110,14 +110,14 @@ TYPE is usually keyword `:error', `:warning' or `:note'."
   "Return function that handles Flymake TYPE with stylistic INDICATOR and FACE."
   `(defun ,(intern (format "tk/modeline-flymake-%s" type)) ()
      (when-let ((count (tk/modeline-flymake-counter
-			,(intern (format ":%s" type)))))
+                        ,(intern (format ":%s" type)))))
        (concat
-	(propertize ,indicator 'face 'shadow)
-	(propertize count
-		    'face ',(or face type)
-		    'mouse-face 'mode-line-highlight
-		    'local-map tk/modeline-flymake-map
-		    'help-echo "mouse-1: buffer diagnostics\nmouse-3: project diagnostics")))))
+        (propertize ,indicator 'face 'shadow)
+        (propertize count
+                    'face ',(or face type)
+                    'mouse-face 'mode-line-highlight
+                    'local-map tk/modeline-flymake-map
+                    'help-echo "mouse-1: buffer diagnostics\nmouse-3: project diagnostics")))))
 
 (tk/modeline-flymake-type error "☣")
 (tk/modeline-flymake-type warning "!")
@@ -126,30 +126,30 @@ TYPE is usually keyword `:error', `:warning' or `:note'."
 (defvar-local tk/modeline-flymake
     `(:eval
       (when (and (bound-and-true-p flymake-mode)
-		 (mode-line-window-selected-p))
-	(list
-	 '(:eval (tk/modeline-flymake-error))
-	 '(:eval (tk/modeline-flymake-warning))
-	 '(:eval (tk/modeline-flymake-note)))))
+                 (mode-line-window-selected-p))
+        (list
+         '(:eval (tk/modeline-flymake-error))
+         '(:eval (tk/modeline-flymake-warning))
+         '(:eval (tk/modeline-flymake-note)))))
   "Mode line construct displaying `flymake-mode-line-format'.
 Specific to the current window's mode line.")
 
 (setq mode-line-right-align-edge 'right-margin)
 
 (setq-default mode-line-format
-	      '(" "
-		tk/modeline-buffer-identification
-		tk/modeline-position-in-buffer
-		tk/modeline-major-mode
-		mode-line-format-right-align
-		tk/modeline-vc-branch
-		" "
-		tk/modeline-flymake
-		" "))
+              '(" "
+                tk/modeline-buffer-identification
+                tk/modeline-position-in-buffer
+                tk/modeline-major-mode
+                mode-line-format-right-align
+                tk/modeline-vc-branch
+                " "
+                tk/modeline-flymake
+                " "))
 
 (dolist (construct '(tk/modeline-buffer-identification
-		     tk/modeline-position-in-buffer
-		     tk/modeline-major-mode
-		     tk/modeline-vc-branch
-		     tk/modeline-flymake))
+                     tk/modeline-position-in-buffer
+                     tk/modeline-major-mode
+                     tk/modeline-vc-branch
+                     tk/modeline-flymake))
   (put construct 'risky-local-variable t))

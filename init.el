@@ -9,23 +9,23 @@
 
 (setq package-archives
       '(("gnu" . "https://elpa.gnu.org/packages/")
-	("nongnu" . "https://elpa.nongnu.org/nongnu/")
-	("melpa" . "https://melpa.org/packages/")))
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+        ("melpa" . "https://melpa.org/packages/")))
 
 (setq package-archive-priorities
       '(("gnu" . 3)
-	("melpa" . 2)
-	("nongnu" . 1)))
+        ("melpa" . 2)
+        ("nongnu" . 1)))
 
 ;; Keep ~/.emacs.d clean
 (use-package no-littering
   :ensure t
   :config
   (setq auto-save-file-name-transforms
-	`((".*" ,(no-littering-expand-var-file-name "auto-save/")))))
+        `((".*" ,(no-littering-expand-var-file-name "auto-save/")))))
 
 (dolist (module '("preferences.el"
-		  "tk-modeline.el"))
+                  "tk-modeline.el"))
   (load (concat user-emacs-directory (format "modules/%s" module))))
 
 ;; ensure environmental variables inside Emacs look the same as in the user's shell
@@ -72,9 +72,9 @@
 ;; Project management ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
 (defun tk/add-project-paths (paths)
-    "Add PATHS to projectile projects path if they exist."
-    (setq projectile-project-search-path
-          (seq-filter #'file-directory-p paths)))
+  "Add PATHS to projectile projects path if they exist."
+  (setq projectile-project-search-path
+        (seq-filter #'file-directory-p paths)))
 
 ;; TODO 2024-08-06: Try using Emacs's default project manager?
 
@@ -96,9 +96,9 @@
   "Return files with EXTENSION within the current project."
   (interactive "sExtension (without dot): ")
   (let* ((project-files (projectile-current-project-files))
-	 (filtered-files (seq-filter (lambda (file)
-				       (string-suffix-p (concat "." extension) file))
-				     project-files)))
+         (filtered-files (seq-filter (lambda (file)
+                                       (string-suffix-p (concat "." extension) file))
+                                     project-files)))
     (find-file (completing-read "File: " filtered-files))))
 
 
@@ -154,16 +154,16 @@
   :config
   (with-eval-after-load 'xref
     (setq xref-show-xrefs-function #'consult-xref
-	  xref-show-definitions-function #'consult-xref)))
+          xref-show-definitions-function #'consult-xref)))
 
 (use-package embark
   :ensure t
   :bind (("C-." . embark-act))
   :config
   (add-to-list 'display-buffer-alist
-	       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-		 nil
-		 (window-parameters (mode-line-format . none)))))
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
 (use-package embark-consult
   :ensure t
   :hook (embark-collect-mode . consult-preview-at-point-mode))
@@ -181,8 +181,8 @@
   :ensure t
   :config
   (setq completion-styles '(orderless basic)
-	completion-category-defaults nil
-	completion-category-overrides '((file (styles partial-completion)))))
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
 
 ;; a minor mode that displays the key bindings following your currently entered incomplete
 ;; command in a popup.
@@ -207,16 +207,16 @@
   :ensure t
   :config
   (setq modus-themes-to-toggle '(modus-vivendi modus-operandi)
-	;;modus-themes-to-toggle '(modus-vivendi-tinted modus-operandi-tinted)
-	;;modus-themes-to-toggle '(modus-vivendi-deuteranopia modus-operandi-deuteranopia)
-	;;modus-themes-to-toggle '(modus-vivendi-tritanopia modus-operandi-tritanopia)
-	modus-themes-bold-constructs nil
-	modus-themes-italic-constructs t)
+        ;;modus-themes-to-toggle '(modus-vivendi-tinted modus-operandi-tinted)
+        ;;modus-themes-to-toggle '(modus-vivendi-deuteranopia modus-operandi-deuteranopia)
+        ;;modus-themes-to-toggle '(modus-vivendi-tritanopia modus-operandi-tritanopia)
+        modus-themes-bold-constructs nil
+        modus-themes-italic-constructs t)
   (modus-themes-load-theme (car modus-themes-to-toggle))
 
   (general-define-key :prefix "SPC"
-		      :states 'motion
-		      "t t" '(modus-themes-toggle :which-key "Toggle theme")))
+                      :states 'motion
+                      "t t" '(modus-themes-toggle :which-key "Toggle theme")))
 
 ;;;;;;;;;;
 ;; Font ;;
@@ -231,11 +231,11 @@
 ;;;;;;;;;;;
 
 (add-hook 'emacs-lisp-mode-hook
-	  (lambda ()
-	    (map-local! emacs-lisp-mode-map
-	      "e"   '(:ignore t :which-key "eval")
-	      "e e" 'eval-last-sexp
-	      "e b" 'eval-buffer)))
+          (lambda ()
+            (map-local! emacs-lisp-mode-map
+              "e"   '(:ignore t :which-key "eval")
+              "e e" 'eval-last-sexp
+              "e b" 'eval-buffer)))
 
 ;;;;;;;;;;;;;;;;;
 ;; Development ;;
@@ -262,8 +262,8 @@
 ;;  :ensure t
 ;;  :commands (lsp lsp-deferred)
 ;;  :hook ((lsp-mode . (lambda ()
-;;		       (evil-local-set-key 'normal (kbd "g d") 'lsp-find-definition)
-;;		       (evil-local-set-key 'normal (kbd "g r") 'lsp-find-references))))
+;;             (evil-local-set-key 'normal (kbd "g d") 'lsp-find-definition)
+;;             (evil-local-set-key 'normal (kbd "g r") 'lsp-find-references))))
 ;;  :config
 ;;  (lsp-enable-which-key-integration))
 ;;
@@ -279,10 +279,11 @@
   (python-mode . eglot-ensure)
   (typescript-mode . eglot-ensure)
   (eglot-managed-mode . (lambda ()
-			  (evil-local-set-key 'normal (kbd "g d") 'xref-find-definitions)
-			  (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)))
+                          (evil-local-set-key 'normal (kbd "g d") 'xref-find-definitions)
+                          (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)))
   :config
-  (add-to-list 'eglot-server-programs '(python-mode . ("pyright-langserver" "--stdio"))))
+  (add-to-list 'eglot-server-programs '(python-mode . ("pyright-langserver" "--stdio")))
+  (setq eglot-autoshutdown t))
 
 ;; Syntax checking
 (use-package flymake
@@ -305,20 +306,20 @@
 (defun tk/ts-lint-buffer ()
   (interactive)
   (let ((command "npm run lint . ")
-	(current-file-path (buffer-file-name))
-	(default-directory "/Users/takamura/repos/comp/comp-app/"))
+        (current-file-path (buffer-file-name))
+        (default-directory "/Users/takamura/repos/comp/comp-app/"))
     (compile (format "%s %s" command current-file-path))))
 
 (defun tk/ts-lint-project ()
   (interactive)
   (let ((command "npm run lint")
-	(default-directory "/Users/takamura/repos/comp/comp-app/"))
+        (default-directory "/Users/takamura/repos/comp/comp-app/"))
     (compile command)))
 
 (defun tk/ts-format-project ()
   (interactive)
   (let ((command "npm run format")
-	(default-directory "/Users/takamura/repos/comp/comp-app/"))
+        (default-directory "/Users/takamura/repos/comp/comp-app/"))
     (compile command)))
 
 (use-package typescript-mode
@@ -417,12 +418,12 @@
                     "t l" '(display-line-numbers-mode :which-key "Toggle line number"))
 
 (general-define-key :prefix "SPC"
-		    :states 'motion
-		    "s" '(:ignore t :which-key "search")
-		    "s l" '(consult-line :which-key "in file")
-		    "s p" '(consult-ripgrep :which-key "in project")
-		    "s f" '(projectile-find-file :which-key "file")
-		    "s F" '(tk/projectile-find-file-with-extension :which-key "file with extension"))
+                    :states 'motion
+                    "s" '(:ignore t :which-key "search")
+                    "s l" '(consult-line :which-key "in file")
+                    "s p" '(consult-ripgrep :which-key "in project")
+                    "s f" '(projectile-find-file :which-key "file")
+                    "s F" '(tk/projectile-find-file-with-extension :which-key "file with extension"))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows resizing ;;

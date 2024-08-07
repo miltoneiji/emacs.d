@@ -63,7 +63,8 @@ This ain't a typewriter."
 
 (defun tk-defaults/dont-indent-with-tabs ()
   "Don't indent with tabs."
-  (setq indent-tabs-mode nil))
+  (setq-default indent-tabs-mode nil
+                tab-width 4))
 
 (tk-defaults/open-files-from-home-directory)
 (tk-defaults/delete-trailing-whitespace)
