@@ -1,5 +1,4 @@
-;  :custom
-;; init.el --- Startup file for Emacs      -*- lexical-binding: t; -*-
+;;; init.el --- Startup file for Emacs      -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 
@@ -200,19 +199,6 @@
   (which-key-min-display-lines 6)
   (which-key-side-window-slot -10))
 
-;; In-buffer completion
-(use-package corfu
-  :ensure t
-  :init
-  (global-corfu-mode)
-  (corfu-history-mode)
-  :custom
-  (corfu-cycle t) ;; Allows cycling through candidates
-  (corfu-auto t)  ;; Enable auto completion
-  (corfu-auto-prefix 2)
-  (corfu-auto-delay 0.0)
-  (corfu-echo-documentation 0.25))
-
 ;;;;;;;;;;;
 ;; Theme ;;
 ;;;;;;;;;;;
@@ -287,31 +273,17 @@
 ;;  :custom
 ;;  (lsp-ui-doc-position 'bottom))
 
-;; Note: Before using the treesit modes, you need to run
-;; M-x treesit-install-language-grammar
-(use-package treesit
-  :ensure nil
-  :config
-  (setq-default treesit-language-source-alist
-                '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript"
-                                 "master"
-                                 "typescript/src"))
-                  (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript"
-                          "master"
-                          "tsx/src"))
-                  (python . ("https://github.com/tree-sitter/tree-sitter-python")))))
-
 (use-package eglot
   :ensure nil
   :hook
-  (python-ts-mode . eglot-ensure)
+  (python-mode . eglot-ensure)
   (typescript-ts-mode . eglot-ensure)
   (tsx-ts-mode . eglot-ensure)
   (eglot-managed-mode . (lambda ()
                           (evil-local-set-key 'normal (kbd "g d") 'xref-find-definitions)
                           (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)))
   :config
-  (add-to-list 'eglot-server-programs '(python-ts-mode . ("pyright-langserver" "--stdio")))
+  (add-to-list 'eglot-server-programs '(python-mode . ("pyright-langserver" "--stdio")))
   (setq eglot-autoshutdown t))
 
 ;; Syntax checking
@@ -320,20 +292,20 @@
   :hook (prog-mode . flymake-mode))
 
 ;; For completion popups.
-;;(use-package company
-;;  :ensure t
-;;  :hook ((after-init . global-company-mode))
-;;  :custom
-;;  (company-idle-delay 0))
+(use-package company
+  :ensure t
+  :hook ((after-init . global-company-mode))
+  :custom
+  (company-idle-delay 0))
 
-(use-package python-ts-mode
-  :ensure nil
-  :mode "\\.py\\'"
+(use-package python-mode
+  :ensure t
   :custom
   (python-shell-interpreter "python3.11")
+  (python-indent-offset 4)
   :config
   (general-define-key :prefix "SPC"
-                      :keymaps 'python-ts-mode-map
+                      :keymaps 'python-mode-map
                       :states 'normal
                       "n d" '(py-narrow-to-def :which-key "def")
                       "n l" '(py-narrow-to-block :which-key "block")
@@ -357,6 +329,17 @@
   (let ((command "npm run format")
         (default-directory "/Users/takamura/repos/comp/comp-app/"))
     (compile command)))
+
+(use-package treesit
+  :ensure nil
+  :config
+  (setq-default treesit-language-source-alist
+                '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript"
+                                 "master"
+                                 "typescript/src"))
+                  (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript"
+                          "master"
+                          "tsx/src")))))
 
 (use-package typescript-ts-mode
   :ensure nil
@@ -505,7 +488,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages nil))
+ '(package-selected-packages
+   '(company embark-consult evil-collection evil-escape
+             exec-path-from-shell f general git-gutter-fringe
+             marginalia markdown-mode modus-themes no-littering
+             orderless smartparens spinner treemacs-evil
+             treemacs-projectile vertico writeroom-mode yaml-mode
+             yasnippet)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
