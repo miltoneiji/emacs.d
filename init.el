@@ -308,7 +308,7 @@
   (typescript-ts-mode . eglot-ensure)
   (tsx-ts-mode . eglot-ensure)
   (eglot-managed-mode . (lambda ()
-                          (evil-local-set-key 'normal (kbd "g d") 'xref-find-definitions)
+                          (evil-local-set-key 'normal (kbd "g d") 'eglot-find-implementation)
                           (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)))
   :config
   (add-to-list 'eglot-server-programs '(python-ts-mode . ("pyright-langserver" "--stdio")))
