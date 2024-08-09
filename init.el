@@ -358,26 +358,29 @@
         (default-directory "/Users/takamura/repos/comp/comp-app/"))
     (compile command)))
 
-(use-package typescript-ts-mode
-  :ensure nil
-  :mode "\\.ts\\'"
+(use-package jtsx
+  :ensure t
+  :mode (("\\.tsx?\\'" . jtsx-tsx-mode)
+         ("\\.ts\\'" . jtsx-typescript-mode))
+  :hook ((jtsx-tsx-mode . hs-minor-mode)
+         (jtsx-typescript-mode . hs-minor-mode))
+  :custom
+  (typescript-ts-mode-indent-offset 2)
+  (jtsx-indent-statement-block-regarding-standalone-parent t)
   :config
-  ;;(setq typescript-indent-level 2)
-  (map-local! typescript-ts-mode-map
-    "l" '(tk/ts-lint-buffer :which-key "Lint buffer")
-    "L" '(tk/ts-lint-project :which-key "Lint project")
-    "F" '(tk/ts-format-project :which-key "Format project")))
+  (defun jtsx-bind-keys-to-mode-map (mode-map)
+    "Bind keys to MODE-MAP."
+    (map-local! mode-map
+      "l" '(tk/ts-lint-buffer :which-key "Lint buffer")
+      "L" '(tk/ts-lint-project :which-key "Lint proj")
+      "F" '(tk/ts-format-project :which-key "Format proj")))
+  (defun jtsx-bind-keys-to-jtsx-tsx-mode ()
+    (jtsx-bind-keys-to-mode-map jtsx-tsx-mode-map))
+  (defun jtsx-bind-keys-to-jtsx-typescript-mode ()
+    (jtsx-bind-keys-to-mode-map jtsx-typescript-mode-map))
 
-(use-package tsx-ts-mode
-  :ensure nil
-  :mode "\\.tsx\\'"
-  :config
-  ;;(setq typescript-indent-level 2)
-  (map-local! tsx-ts-mode-map
-    "l" '(tk/ts-lint-buffer :which-key "Lint buffer")
-    "L" '(tk/ts-lint-project :which-key "Lint project")
-    "F" '(tk/ts-format-project :which-key "Format project"))
-  )
+  (add-hook 'jtsx-tsx-mode-hook 'jtsx-bind-keys-to-jtsx-tsx-mode)
+  (add-hook 'jtsx-typescript-mode-hook 'jtsx-bind-keys-to-jtsx-typescript-mode))
 
 ;;;;;;;;;;;
 ;;; misc ;;
