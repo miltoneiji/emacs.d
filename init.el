@@ -103,9 +103,11 @@
     (find-file (completing-read "File: " filtered-files))))
 
 
-;; TODO 2024-08-04: File search can be improved.
+;; TODO 2024-08-04: Search can be improved.
 ;; - Search files with a specific extension.
-;; - Search files within a specific path
+;; - Search files within a specific path.
+;; - Search within files with a specific extension.
+;; - Search within files within a specific path.
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -325,6 +327,8 @@
 ;;  :hook ((after-init . global-company-mode))
 ;;  :custom
 ;;  (company-idle-delay 0))
+
+;; TODO 2024-08-09: set up emacs-pet?
 
 (use-package python-ts-mode
   :ensure nil
