@@ -5,10 +5,6 @@
 
 ;;; Code:
 
-;; TODO 2024-08-09: Add narrow to modeline
-;; TODO 2024-08-10: modeline: save/not saved
-;; TODO 2024-08-10: org mode
-
 ;; Packages
 (require 'package)
 

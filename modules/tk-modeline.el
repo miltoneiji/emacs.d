@@ -4,6 +4,27 @@
   "String length after which truncation should be done in small windows."
   :type 'natnum)
 
+(defgroup tk/modeline-faces nil
+  "Faces for my custom modeline."
+  :group 'tk/modeline)
+
+;;;;;;;;;;;
+;; Faces ;;
+;;;;;;;;;;;
+
+(defface tk/modeline-indicator-button nil
+  "Generic face used for indicators that have a background.")
+
+(defface tk/modeline-indicator-cyan-bg
+  '((default :inherit (bold tk/modeline-indicator-button))
+    (((class color) (min-colors 88) (background light))
+     :background "#006080" :foreground "white")
+    (((class color) (min-colors 88) (background dark))
+     :background "#40c0e0" :foreground "black")
+    (t :background "cyan" :foreground "black"))
+  "Face for modeline indicators with a background."
+  :group 'tk/modeline-faces)
+
 ;; Helpers
 (defun tk/common-window-small-p ()
   "Return non-nil if window is small.
@@ -28,7 +49,36 @@ Truncation is done up to `tk/modeline-string-truncate-length'."
       (concat "..." (substring str (- tk/modeline-string-truncate-length)))
     str))
 
-;;;; Buffer identification
+;;;;;;;;;;;;;;;;;;;;;;
+;; Narrow indicator ;;
+;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar-local tk/modeline-narrow
+    '(:eval
+      (when (and (mode-line-window-selected-p)
+                 (buffer-narrowed-p)
+                 (not (derived-mode-p 'Info-mode 'help-mode 'special-mode 'message-mode)))
+        (propertize " Narrow " 'face 'tk/modeline-indicator-cyan-bg)))
+  "Mode line construct to report the multilingual environment.")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Buffer identification ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun tk/modeline-buffer-identification-face ()
+  "Return appropriate face or face list for `tk/modeline-buffer-identification'."
+  (let ((file (buffer-file-name)))
+    (cond
+     ((and (mode-line-window-selected-p)
+           file
+           (buffer-modified-p))
+      '(italic mode-line-buffer-id))
+
+     ((and file (buffer-modified-p))
+      'italic)
+
+     ((mode-line-window-selected-p)
+      'mode-line-buffer-id))))
 
 (defun tk/modeline-buffer-read-only-status ()
   "Return a lock symbol if buffer is read-only, else return empty string."
@@ -47,7 +97,7 @@ Truncation is done up to `tk/modeline-string-truncate-length'."
       (list
        (tk/modeline-buffer-read-only-status)
        (propertize (tk/modeline-buffer-name)
-                   'face 'bold
+                   'face (tk/modeline-buffer-identification-face)
                    'help-echo (buffer-file-name))))
   "Mode line construct for identifying the buffer being displayed.")
 
@@ -138,6 +188,8 @@ Specific to the current window's mode line.")
 
 (setq-default mode-line-format
               '(" "
+                tk/modeline-narrow
+                " "
                 tk/modeline-buffer-identification
                 tk/modeline-position-in-buffer
                 tk/modeline-major-mode
@@ -147,7 +199,8 @@ Specific to the current window's mode line.")
                 tk/modeline-flymake
                 " "))
 
-(dolist (construct '(tk/modeline-buffer-identification
+(dolist (construct '(tk/modeline-narrow
+                     tk/modeline-buffer-identification
                      tk/modeline-position-in-buffer
                      tk/modeline-major-mode
                      tk/modeline-vc-branch
