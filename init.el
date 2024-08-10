@@ -5,6 +5,8 @@
 
 ;;; Code:
 
+;; TODO 2024-08-09: Add narrow to modeline
+
 ;; Packages
 (require 'package)
 
@@ -32,10 +34,8 @@
 ;; ensure environmental variables inside Emacs look the same as in the user's shell
 (use-package exec-path-from-shell
   :ensure t
-  :config
-  (progn
-    (when (memq window-system '(mac ns x))
-      (exec-path-from-shell-initialize))))
+  :if (memq (window-system) '(mac ns x))
+  :config (exec-path-from-shell-initialize))
 
 (use-package general
   :ensure t)
@@ -306,7 +306,6 @@
 (use-package eglot
   :ensure nil
   :hook
-  (python-ts-mode . eglot-ensure)
   (typescript-ts-mode . eglot-ensure)
   (tsx-ts-mode . eglot-ensure)
   (eglot-managed-mode . (lambda ()
@@ -321,14 +320,9 @@
   :ensure nil
   :hook (prog-mode . flymake-mode))
 
-;; For completion popups.
-;;(use-package company
-;;  :ensure t
-;;  :hook ((after-init . global-company-mode))
-;;  :custom
-;;  (company-idle-delay 0))
-
-;; TODO 2024-08-09: set up emacs-pet?
+;;;;;;;;;;;;
+;; Python ;;
+;;;;;;;;;;;;
 
 (use-package python-ts-mode
   :ensure nil
@@ -342,6 +336,35 @@
                       "n d" '(py-narrow-to-def :which-key "def")
                       "n l" '(py-narrow-to-block :which-key "block")
                       "n c" '(py-narrow-to-class :which-key "class")))
+
+(use-package pet
+  :ensure t
+  :ensure-system-package ((dasel . "brew install dasel")
+                          (sqlite3 . "brew install sqlite3"))
+  :config
+  (add-hook 'python-base-mode-hook 'pet-mode -10)
+
+  (defun python-env-setup ()
+    "Set up my Python environment."
+    (setq-local python-shell-interpreter (pet-executable-find "python")
+                python-shell-virtualenv-root (pet-virtualenv-root))
+    (pet-eglot-setup)
+    (eglot-ensure))
+
+  (add-hook 'python-base-mode-hook 'python-env-setup))
+
+(use-package ruff-format
+  :ensure t
+  :hook ((python-base-mode . ruff-format-on-save-mode))
+  :config
+  (map-local! python-base-mode-map
+    "f" '(:ignore t :which-key "format")
+    "f b" '(ruff-format-buffer :which-key "buffer")
+    "f r" '(ruff-format-region :which-key "region")))
+
+;;;;;;;;;;;;;;;;;;;
+;; End of Python ;;
+;;;;;;;;;;;;;;;;;;;
 
 (defun tk/ts-lint-buffer ()
   (interactive)
