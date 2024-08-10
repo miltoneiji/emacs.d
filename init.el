@@ -30,7 +30,8 @@
         `((".*" ,(no-littering-expand-var-file-name "auto-save/")))))
 
 (dolist (module '("preferences.el"
-                  "tk-modeline.el"))
+                  "tk-modeline.el"
+                  "setup-org-mode.el"))
   (load (concat user-emacs-directory (format "modules/%s" module))))
 
 ;; ensure environmental variables inside Emacs look the same as in the user's shell
@@ -166,8 +167,7 @@
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
   :ensure t
-  :config
-  (savehist-mode))
+  :config (savehist-mode))
 
 ;; This package provides an orderless completion style that divides the pattern into
 ;; space-separated components, and matches candidates that match all of the components
@@ -182,7 +182,7 @@
 ;; a minor mode that displays the key bindings following your currently entered incomplete
 ;; command in a popup.
 (use-package which-key
-  :ensure t
+  :ensure nil
   :config
   (which-key-mode)
   (which-key-setup-side-window-bottom)
@@ -217,6 +217,7 @@
 
 (general-define-key :prefix "SPC"
                     :states 'motion
+                    "SPC" '(consult-fd :which-key "file")
                     "s" '(:ignore t :which-key "search")
                     "s l" '(consult-line :which-key "in file")
                     "s p" '(consult-ripgrep :which-key "in project")
@@ -351,6 +352,7 @@
   :init
   (defun python-setup ()
     "Python setup."
+    (setq python-indent-offset 4)
     (general-define-key :prefix "SPC"
                         :keymaps 'python-base-mode-map
                         :states 'normal
