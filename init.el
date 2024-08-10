@@ -5,7 +5,10 @@
 
 ;;; Code:
 
+;; TODO 2024-08-06: Try using Emacs's default project manager?
 ;; TODO 2024-08-09: Add narrow to modeline
+;; TODO 2024-08-10: modeline: save/not saved
+;; TODO 2024-08-10: org mode
 
 ;; Packages
 (require 'package)
@@ -47,9 +50,7 @@
   (evil-mode 1)
   :custom
   ;; without this, TAB does not work properly
-  (evil-want-C-i-jump nil)
-  ;; necessary for evil-collection
-  (evil-want-keybinding nil))
+  (evil-want-C-i-jump nil))
 
 (use-package evil-escape
   :ensure t
@@ -57,9 +58,6 @@
   (evil-escape-mode 1)
   :custom
   (evil-escape-key-sequence "jk"))
-
-(use-package evil-collection
-  :ensure t)
 
 ;; Unbinding SPC since it will be used as a prefix
 (define-key evil-motion-state-map (kbd "SPC") nil)
@@ -77,7 +75,6 @@
   (setq projectile-project-search-path
         (seq-filter #'file-directory-p paths)))
 
-;; TODO 2024-08-06: Try using Emacs's default project manager?
 
 (use-package projectile
   :ensure t
@@ -89,26 +86,9 @@
                       "p p" '(projectile-switch-project :which-key "Switch project")
                       "p l" '(projectile-discover-projects-in-search-path :which-key "Discover projects")
                       "p i" '(projectile-invalidate-cache :which-key "Invalidate cache")
-                      "SPC" '(projectile-find-file :which-key "Find file")
+                      "SPC" '(consult-fd :which-key "Find file")
                       "p /" '(consult-ripgrep :which-key "Search"))
   (tk/add-project-paths '("~/repos")))
-
-(defun tk/projectile-find-file-with-extension (extension)
-  "Return files with EXTENSION within the current project."
-  (interactive "sExtension (without dot): ")
-  (let* ((project-files (projectile-current-project-files))
-         (filtered-files (seq-filter (lambda (file)
-                                       (string-suffix-p (concat "." extension) file))
-                                     project-files)))
-    (find-file (completing-read "File: " filtered-files))))
-
-
-;; TODO 2024-08-04: Search can be improved.
-;; - Search files with a specific extension.
-;; - Search files within a specific path.
-;; - Search within files with a specific extension.
-;; - Search within files within a specific path.
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; File and project explorer ;;
@@ -154,6 +134,8 @@
 ;; Preview, narrowing, grouping, search, etc.
 (use-package consult
   :ensure t
+  :custom
+  (consult-async-min-input 0)
   :config
   (with-eval-after-load 'xref
     (setq xref-show-xrefs-function #'consult-xref
@@ -214,6 +196,21 @@
   (corfu-auto-prefix 2)
   (corfu-auto-delay 0.0)
   (corfu-echo-documentation 0.25))
+
+;;;;;;;;;;;;
+;; Search ;;
+;;;;;;;;;;;;
+
+;; consult-ripgrep:
+;; - To narrow to specific file extensions: `#<find term>#\.tsx'
+;; - To narrow to specific file path: `#<find term>#/path'
+
+(general-define-key :prefix "SPC"
+                    :states 'motion
+                    "s" '(:ignore t :which-key "search")
+                    "s l" '(consult-line :which-key "in file")
+                    "s p" '(consult-ripgrep :which-key "in project")
+                    "s f" '(consult-fd :which-key "file"))
 
 ;;;;;;;;;;;
 ;; Theme ;;
@@ -298,10 +295,11 @@
                 '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript"
                                  "master"
                                  "typescript/src"))
-                  (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript"
-                          "master"
-                          "tsx/src"))
-                  (python . ("https://github.com/tree-sitter/tree-sitter-python")))))
+                  (tsx        . ("https://github.com/tree-sitter/tree-sitter-typescript"
+                                 "master"
+                                 "tsx/src"))
+                  (python     . ("https://github.com/tree-sitter/tree-sitter-python"))
+                  (json       . ("https://github.com/tree-sitter/tree-sitter-json")))))
 
 (use-package eglot
   :ensure nil
@@ -319,6 +317,20 @@
 (use-package flymake
   :ensure nil
   :hook (prog-mode . flymake-mode))
+
+;;(use-package flymake-eslint
+;;  :ensure t
+;;  :functions flymake-eslint-enable
+;;  :preface
+;;  (defun me/flymake-eslint-enable-maybe ()
+;;    "Enable `flymake-eslint' based on the project configuration.
+;;Search for the project ESLint configuration to determine whether the buffer
+;;should be checked."
+;;    (when-let* ((root (locate-dominating-file (buffer-file-name) "package.json"))
+;;                (rc (locate-file ".eslintrc" (list root) '(".js" ".json"))))
+;;      (make-local-variable 'exec-path)
+;;      (push (file-name-concat root "node_modules" ".bin") exec-path)
+;;      (flymake-eslint-enable))))
 
 ;;;;;;;;;;;;
 ;; Python ;;
@@ -373,6 +385,10 @@
 ;; End of Python ;;
 ;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;
+;; Typescript ;;
+;;;;;;;;;;;;;;;;
+
 (defun tk/ts-lint-buffer ()
   (interactive)
   (let ((command "npm run lint . ")
@@ -386,12 +402,6 @@
         (default-directory "/Users/takamura/repos/comp/comp-app/"))
     (compile command)))
 
-(defun tk/ts-format-project ()
-  (interactive)
-  (let ((command "npm run format")
-        (default-directory "/Users/takamura/repos/comp/comp-app/"))
-    (compile command)))
-
 (use-package jtsx
   :ensure t
   :mode (("\\.tsx?\\'" . jtsx-tsx-mode)
@@ -400,14 +410,15 @@
          (jtsx-typescript-mode . hs-minor-mode))
   :custom
   (typescript-ts-mode-indent-offset 2)
-  (jtsx-indent-statement-block-regarding-standalone-parent t)
+  (jtsx-indent-statement-block-regarding-standalone-parent nil)
   :config
   (defun jtsx-bind-keys-to-mode-map (mode-map)
     "Bind keys to MODE-MAP."
     (map-local! mode-map
+      "f" '(:ignore t :which-key "format")
+      ;;"f b" '(prettier-prettify :which-key "buffer")
       "l" '(tk/ts-lint-buffer :which-key "Lint buffer")
-      "L" '(tk/ts-lint-project :which-key "Lint proj")
-      "F" '(tk/ts-format-project :which-key "Format proj")))
+      "L" '(tk/ts-lint-project :which-key "Lint proj")))
   (defun jtsx-bind-keys-to-jtsx-tsx-mode ()
     (jtsx-bind-keys-to-mode-map jtsx-tsx-mode-map))
   (defun jtsx-bind-keys-to-jtsx-typescript-mode ()
@@ -415,6 +426,15 @@
 
   (add-hook 'jtsx-tsx-mode-hook 'jtsx-bind-keys-to-jtsx-tsx-mode)
   (add-hook 'jtsx-typescript-mode-hook 'jtsx-bind-keys-to-jtsx-typescript-mode))
+
+(use-package nvm
+  :ensure t)
+
+;;(use-package prettier
+;;  :ensure t
+;;  ;;:hook ((jtsx-tsx-mode . prettier-mode)
+;;  ;;       (jtsx-typescript-mode . prettier-mode))
+;;  )
 
 ;;;;;;;;;;;
 ;;; misc ;;
@@ -515,14 +535,6 @@
 
 (general-define-key :prefix "SPC"
                     :states 'motion
-                    "s" '(:ignore t :which-key "search")
-                    "s l" '(consult-line :which-key "in file")
-                    "s p" '(consult-ripgrep :which-key "in project")
-                    "s f" '(projectile-find-file :which-key "file")
-                    "s F" '(tk/projectile-find-file-with-extension :which-key "file with extension"))
-
-(general-define-key :prefix "SPC"
-                    :states 'motion
                     "n" '(:ignore t :which-key "narrowing")
                     "n r" '(narrow-to-region :which-key "region")
                     "n q" '(widen :which-key "quit narrowing"))
@@ -542,7 +554,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages nil))
+ '(package-selected-packages
+   '(company corfu embark-consult evil-escape exec-path-from-shell
+             general git-gutter-fringe jtsx marginalia markdown-mode
+             modus-themes no-littering orderless pet prettier
+             ruff-format smartparens spinner treemacs-evil
+             treemacs-projectile vertico writeroom-mode yaml-mode
+             yasnippet)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

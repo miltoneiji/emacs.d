@@ -1,8 +1,13 @@
-;;; init.el --- Startup file for Emacs      -*- lexical-binding: t; -*-
+;  :custom
+;; init.el --- Startup file for Emacs      -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 
 ;;; Code:
+
+;; TODO 2024-08-06: Try using Emacs's default project manager?
+;; TODO 2024-08-09: Add narrow to modeline
+;; TODO 2024-08-10: modeline: save/not saved
 
 ;; Packages
 (require 'package)
@@ -31,10 +36,8 @@
 ;; ensure environmental variables inside Emacs look the same as in the user's shell
 (use-package exec-path-from-shell
   :ensure t
-  :config
-  (progn
-    (when (memq window-system '(mac ns x))
-      (exec-path-from-shell-initialize))))
+  :if (memq (window-system) '(mac ns x))
+  :config (exec-path-from-shell-initialize))
 
 (use-package general
   :ensure t)
@@ -46,9 +49,7 @@
   (evil-mode 1)
   :custom
   ;; without this, TAB does not work properly
-  (evil-want-C-i-jump nil)
-  ;; necessary for evil-collection
-  (evil-want-keybinding nil))
+  (evil-want-C-i-jump nil))
 
 (use-package evil-escape
   :ensure t
@@ -56,9 +57,6 @@
   (evil-escape-mode 1)
   :custom
   (evil-escape-key-sequence "jk"))
-
-(use-package evil-collection
-  :ensure t)
 
 ;; Unbinding SPC since it will be used as a prefix
 (define-key evil-motion-state-map (kbd "SPC") nil)
@@ -76,7 +74,6 @@
   (setq projectile-project-search-path
         (seq-filter #'file-directory-p paths)))
 
-;; TODO 2024-08-06: Try using Emacs's default project manager?
 
 (use-package projectile
   :ensure t
@@ -88,24 +85,9 @@
                       "p p" '(projectile-switch-project :which-key "Switch project")
                       "p l" '(projectile-discover-projects-in-search-path :which-key "Discover projects")
                       "p i" '(projectile-invalidate-cache :which-key "Invalidate cache")
-                      "SPC" '(projectile-find-file :which-key "Find file")
+                      "SPC" '(consult-fd :which-key "Find file")
                       "p /" '(consult-ripgrep :which-key "Search"))
   (tk/add-project-paths '("~/repos")))
-
-(defun tk/projectile-find-file-with-extension (extension)
-  "Return files with EXTENSION within the current project."
-  (interactive "sExtension (without dot): ")
-  (let* ((project-files (projectile-current-project-files))
-         (filtered-files (seq-filter (lambda (file)
-                                       (string-suffix-p (concat "." extension) file))
-                                     project-files)))
-    (find-file (completing-read "File: " filtered-files))))
-
-
-;; TODO 2024-08-04: File search can be improved.
-;; - Search files with a specific extension.
-;; - Search files within a specific path
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; File and project explorer ;;
@@ -199,6 +181,36 @@
   (which-key-min-display-lines 6)
   (which-key-side-window-slot -10))
 
+;; In-buffer completion
+(use-package corfu
+  :ensure t
+  :init
+  (global-corfu-mode)
+  (corfu-history-mode)
+  :custom
+  (corfu-cycle t) ;; Allows cycling through candidates
+  (corfu-auto t)  ;; Enable auto completion
+  (corfu-auto-prefix 2)
+  (corfu-auto-delay 0.0)
+  (corfu-echo-documentation 0.25))
+
+;;;;;;;;;;;;
+;; Search ;;
+;;;;;;;;;;;;
+
+;; TODO 2024-08-10: Start using isearch
+
+;; consult-ripgrep:
+;; - To narrow to specific file extensions: `#<find term>#\.tsx'
+;; - To narrow to specific file path: `#<find term>#/path'
+
+(general-define-key :prefix "SPC"
+                    :states 'motion
+                    "s" '(:ignore t :which-key "search")
+                    "s l" '(consult-line :which-key "in file")
+                    "s p" '(consult-ripgrep :which-key "in project")
+                    "s f" '(consult-fd :which-key "file"))
+
 ;;;;;;;;;;;
 ;; Theme ;;
 ;;;;;;;;;;;
@@ -273,17 +285,31 @@
 ;;  :custom
 ;;  (lsp-ui-doc-position 'bottom))
 
+;; Note: Before using the treesit modes, you need to run
+;; M-x treesit-install-language-grammar
+(use-package treesit
+  :ensure nil
+  :config
+  (setq-default treesit-language-source-alist
+                '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript"
+                                 "master"
+                                 "typescript/src"))
+                  (tsx        . ("https://github.com/tree-sitter/tree-sitter-typescript"
+                                 "master"
+                                 "tsx/src"))
+                  (python     . ("https://github.com/tree-sitter/tree-sitter-python"))
+                  (json       . ("https://github.com/tree-sitter/tree-sitter-json")))))
+
 (use-package eglot
   :ensure nil
   :hook
-  (python-mode . eglot-ensure)
   (typescript-ts-mode . eglot-ensure)
   (tsx-ts-mode . eglot-ensure)
   (eglot-managed-mode . (lambda ()
-                          (evil-local-set-key 'normal (kbd "g d") 'xref-find-definitions)
+                          (evil-local-set-key 'normal (kbd "g d") 'eglot-find-implementation)
                           (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)))
   :config
-  (add-to-list 'eglot-server-programs '(python-mode . ("pyright-langserver" "--stdio")))
+  (add-to-list 'eglot-server-programs '(python-ts-mode . ("pyright-langserver" "--stdio")))
   (setq eglot-autoshutdown t))
 
 ;; Syntax checking
@@ -291,25 +317,76 @@
   :ensure nil
   :hook (prog-mode . flymake-mode))
 
-;; For completion popups.
-(use-package company
-  :ensure t
-  :hook ((after-init . global-company-mode))
-  :custom
-  (company-idle-delay 0))
+;;(use-package flymake-eslint
+;;  :ensure t
+;;  :functions flymake-eslint-enable
+;;  :preface
+;;  (defun me/flymake-eslint-enable-maybe ()
+;;    "Enable `flymake-eslint' based on the project configuration.
+;;Search for the project ESLint configuration to determine whether the buffer
+;;should be checked."
+;;    (when-let* ((root (locate-dominating-file (buffer-file-name) "package.json"))
+;;                (rc (locate-file ".eslintrc" (list root) '(".js" ".json"))))
+;;      (make-local-variable 'exec-path)
+;;      (push (file-name-concat root "node_modules" ".bin") exec-path)
+;;      (flymake-eslint-enable))))
 
-(use-package python-mode
+;;;;;;;;;;;;
+;; Python ;;
+;;;;;;;;;;;;
+
+(use-package python-ts-mode
+  :ensure nil
+  :init
+  (defun python-setup ()
+    "Python setup."
+    (general-define-key :prefix "SPC"
+                        :keymaps 'python-base-mode-map
+                        :states 'normal
+                        "n d" '(py-narrow-to-def :which-key "def")
+                        "n l" '(py-narrow-to-block :which-key "block")
+                        "n c" '(py-narrow-to-class :which-key "class"))
+    (map-local! python-base-mode-map
+      "e" '(:ignore t :which-key "eval")
+      "e e" '(python-shell-send-statement :which-key "statement")
+      "e d" '(python-shell-send-defun :which-key "defun")
+      "e r" '(python-shell-send-region :which-key "region")
+      "e b" '(python-shell-send-buffer :which-key "buffer")))
+  :mode "\\.py\\'"
+  :hook ((python-ts-mode . python-setup)))
+
+(use-package pet
   :ensure t
-  :custom
-  (python-shell-interpreter "python3.11")
-  (python-indent-offset 4)
+  :ensure-system-package ((dasel . "brew install dasel")
+                          (sqlite3 . "brew install sqlite3"))
   :config
-  (general-define-key :prefix "SPC"
-                      :keymaps 'python-mode-map
-                      :states 'normal
-                      "n d" '(py-narrow-to-def :which-key "def")
-                      "n l" '(py-narrow-to-block :which-key "block")
-                      "n c" '(py-narrow-to-class :which-key "class")))
+  (add-hook 'python-base-mode-hook 'pet-mode -10)
+
+  (defun python-pet-setup ()
+    "Set up my Python environment."
+    (setq-local python-shell-interpreter (pet-executable-find "python")
+                python-shell-virtualenv-root (pet-virtualenv-root))
+    (pet-eglot-setup)
+    (eglot-ensure))
+
+  (add-hook 'python-base-mode-hook 'python-pet-setup))
+
+(use-package ruff-format
+  :ensure t
+  :hook ((python-base-mode . ruff-format-on-save-mode))
+  :config
+  (map-local! python-base-mode-map
+    "f" '(:ignore t :which-key "format")
+    "f b" '(ruff-format-buffer :which-key "buffer")
+    "f r" '(ruff-format-region :which-key "region")))
+
+;;;;;;;;;;;;;;;;;;;
+;; End of Python ;;
+;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;
+;; Typescript ;;
+;;;;;;;;;;;;;;;;
 
 (defun tk/ts-lint-buffer ()
   (interactive)
@@ -324,43 +401,39 @@
         (default-directory "/Users/takamura/repos/comp/comp-app/"))
     (compile command)))
 
-(defun tk/ts-format-project ()
-  (interactive)
-  (let ((command "npm run format")
-        (default-directory "/Users/takamura/repos/comp/comp-app/"))
-    (compile command)))
-
-(use-package treesit
-  :ensure nil
+(use-package jtsx
+  :ensure t
+  :mode (("\\.tsx?\\'" . jtsx-tsx-mode)
+         ("\\.ts\\'" . jtsx-typescript-mode))
+  :hook ((jtsx-tsx-mode . hs-minor-mode)
+         (jtsx-typescript-mode . hs-minor-mode))
+  :custom
+  (typescript-ts-mode-indent-offset 2)
+  (jtsx-indent-statement-block-regarding-standalone-parent nil)
   :config
-  (setq-default treesit-language-source-alist
-                '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript"
-                                 "master"
-                                 "typescript/src"))
-                  (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript"
-                          "master"
-                          "tsx/src")))))
+  (defun jtsx-bind-keys-to-mode-map (mode-map)
+    "Bind keys to MODE-MAP."
+    (map-local! mode-map
+      "f" '(:ignore t :which-key "format")
+      ;;"f b" '(prettier-prettify :which-key "buffer")
+      "l" '(tk/ts-lint-buffer :which-key "Lint buffer")
+      "L" '(tk/ts-lint-project :which-key "Lint proj")))
+  (defun jtsx-bind-keys-to-jtsx-tsx-mode ()
+    (jtsx-bind-keys-to-mode-map jtsx-tsx-mode-map))
+  (defun jtsx-bind-keys-to-jtsx-typescript-mode ()
+    (jtsx-bind-keys-to-mode-map jtsx-typescript-mode-map))
 
-(use-package typescript-ts-mode
-  :ensure nil
-  :mode "\\.ts\\'"
-  :config
-  ;;(setq typescript-indent-level 2)
-  (map-local! typescript-ts-mode-map
-    "l" '(tk/ts-lint-buffer :which-key "Lint buffer")
-    "L" '(tk/ts-lint-project :which-key "Lint project")
-    "F" '(tk/ts-format-project :which-key "Format project")))
+  (add-hook 'jtsx-tsx-mode-hook 'jtsx-bind-keys-to-jtsx-tsx-mode)
+  (add-hook 'jtsx-typescript-mode-hook 'jtsx-bind-keys-to-jtsx-typescript-mode))
 
-(use-package tsx-ts-mode
-  :ensure nil
-  :mode "\\.tsx\\'"
-  :config
-  ;;(setq typescript-indent-level 2)
-  (map-local! tsx-ts-mode-map
-    "l" '(tk/ts-lint-buffer :which-key "Lint buffer")
-    "L" '(tk/ts-lint-project :which-key "Lint project")
-    "F" '(tk/ts-format-project :which-key "Format project"))
-  )
+(use-package nvm
+  :ensure t)
+
+;;(use-package prettier
+;;  :ensure t
+;;  ;;:hook ((jtsx-tsx-mode . prettier-mode)
+;;  ;;       (jtsx-typescript-mode . prettier-mode))
+;;  )
 
 ;;;;;;;;;;;
 ;;; misc ;;
@@ -461,14 +534,6 @@
 
 (general-define-key :prefix "SPC"
                     :states 'motion
-                    "s" '(:ignore t :which-key "search")
-                    "s l" '(consult-line :which-key "in file")
-                    "s p" '(consult-ripgrep :which-key "in project")
-                    "s f" '(projectile-find-file :which-key "file")
-                    "s F" '(tk/projectile-find-file-with-extension :which-key "file with extension"))
-
-(general-define-key :prefix "SPC"
-                    :states 'motion
                     "n" '(:ignore t :which-key "narrowing")
                     "n r" '(narrow-to-region :which-key "region")
                     "n q" '(widen :which-key "quit narrowing"))
@@ -489,12 +554,12 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(company embark-consult evil-collection evil-escape
-             exec-path-from-shell f general git-gutter-fringe
+   '(company corfu embark-consult evil-collection evil-escape
+             exec-path-from-shell general git-gutter-fringe jtsx
              marginalia markdown-mode modus-themes no-littering
-             orderless smartparens spinner treemacs-evil
-             treemacs-projectile vertico writeroom-mode yaml-mode
-             yasnippet)))
+             orderless pet prettier ruff-format smartparens spinner
+             treemacs-evil treemacs-projectile vertico writeroom-mode
+             yaml-mode yasnippet)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
