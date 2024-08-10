@@ -326,16 +326,23 @@
 
 (use-package python-ts-mode
   :ensure nil
+  :init
+  (defun python-setup ()
+    "Python setup."
+    (general-define-key :prefix "SPC"
+                        :keymaps 'python-base-mode-map
+                        :states 'normal
+                        "n d" '(py-narrow-to-def :which-key "def")
+                        "n l" '(py-narrow-to-block :which-key "block")
+                        "n c" '(py-narrow-to-class :which-key "class"))
+    (map-local! python-base-mode-map
+      "e" '(:ignore t :which-key "eval")
+      "e e" '(python-shell-send-statement :which-key "statement")
+      "e d" '(python-shell-send-defun :which-key "defun")
+      "e r" '(python-shell-send-region :which-key "region")
+      "e b" '(python-shell-send-buffer :which-key "buffer")))
   :mode "\\.py\\'"
-  :custom
-  (python-shell-interpreter "python3.11")
-  :config
-  (general-define-key :prefix "SPC"
-                      :keymaps 'python-ts-mode-map
-                      :states 'normal
-                      "n d" '(py-narrow-to-def :which-key "def")
-                      "n l" '(py-narrow-to-block :which-key "block")
-                      "n c" '(py-narrow-to-class :which-key "class")))
+  :hook ((python-ts-mode . python-setup)))
 
 (use-package pet
   :ensure t
@@ -344,14 +351,14 @@
   :config
   (add-hook 'python-base-mode-hook 'pet-mode -10)
 
-  (defun python-env-setup ()
+  (defun python-pet-setup ()
     "Set up my Python environment."
     (setq-local python-shell-interpreter (pet-executable-find "python")
                 python-shell-virtualenv-root (pet-virtualenv-root))
     (pet-eglot-setup)
     (eglot-ensure))
 
-  (add-hook 'python-base-mode-hook 'python-env-setup))
+  (add-hook 'python-base-mode-hook 'python-pet-setup))
 
 (use-package ruff-format
   :ensure t
