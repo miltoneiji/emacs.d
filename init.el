@@ -5,7 +5,6 @@
 
 ;;; Code:
 
-;; TODO 2024-08-06: Try using Emacs's default project manager?
 ;; TODO 2024-08-09: Add narrow to modeline
 ;; TODO 2024-08-10: modeline: save/not saved
 ;; TODO 2024-08-10: org mode
@@ -70,25 +69,36 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project management ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
-(defun tk/add-project-paths (paths)
-  "Add PATHS to projectile projects path if they exist."
-  (setq projectile-project-search-path
-        (seq-filter #'file-directory-p paths)))
+;;(defun tk/add-project-paths (paths)
+;;  "Add PATHS to projectile projects path if they exist."
+;;  (setq projectile-project-search-path
+;;        (seq-filter #'file-directory-p paths)))
 
 
-(use-package projectile
-  :ensure t
+;;(use-package projectile
+;;  :ensure t
+;;  :config
+;;  (projectile-mode +1)
+;;  (general-define-key :prefix "SPC"
+;;                      :states 'motion
+;;                      "p" '(:ignore t :which-key "project")
+;;                      "p p" '(projectile-switch-project :which-key "Switch project")
+;;                      "p l" '(projectile-discover-projects-in-search-path :which-key "Discover projects")
+;;                      "p i" '(projectile-invalidate-cache :which-key "Invalidate cache")
+;;                      "SPC" '(consult-fd :which-key "Find file")
+;;                      "p /" '(consult-ripgrep :which-key "Search"))
+;;  (tk/add-project-paths '("~/repos")))
+
+(defun tk/normal-keymap-set (key prefix-map which-key-text)
+  "Set KEY binding for PREFIX-MAP with WHICH-KEY-TEXT."
+  (keymap-set evil-normal-state-map
+              key prefix-map)
+  (which-key-add-key-based-replacements key which-key-text))
+
+(use-package project
+  :ensure nil
   :config
-  (projectile-mode +1)
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "p" '(:ignore t :which-key "project")
-                      "p p" '(projectile-switch-project :which-key "Switch project")
-                      "p l" '(projectile-discover-projects-in-search-path :which-key "Discover projects")
-                      "p i" '(projectile-invalidate-cache :which-key "Invalidate cache")
-                      "SPC" '(consult-fd :which-key "Find file")
-                      "p /" '(consult-ripgrep :which-key "Search"))
-  (tk/add-project-paths '("~/repos")))
+  (tk/normal-keymap-set "<SPC> p" project-prefix-map "project"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; File and project explorer ;;
