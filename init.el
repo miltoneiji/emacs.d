@@ -308,6 +308,10 @@
                   (python     . ("https://github.com/tree-sitter/tree-sitter-python"))
                   (json       . ("https://github.com/tree-sitter/tree-sitter-json")))))
 
+(use-package ts-fold
+  :ensure nil
+  :load-path  "~/emacs.d/ts-fold")
+
 (use-package eglot
   :ensure nil
   :hook
@@ -562,13 +566,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(company corfu embark-consult evil-escape exec-path-from-shell
-             general git-gutter-fringe jtsx marginalia markdown-mode
-             modus-themes no-littering orderless pet prettier
-             ruff-format smartparens spinner treemacs-evil
-             treemacs-projectile vertico writeroom-mode yaml-mode
-             yasnippet)))
+ '(package-selected-packages nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

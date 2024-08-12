@@ -81,3 +81,6 @@ This ain't a typewriter."
 (tk-defaults/break-line-automatically-in-text-modes)
 (tk-defaults/get-rid-of-the-scroll-jumpiness)
 (tk-defaults/dont-indent-with-tabs)
+
+;; Don't show native compilation warnings
+(setq native-comp-async-report-warnings-errors nil)
