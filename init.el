@@ -262,38 +262,6 @@
 ;; Development ;;
 ;;;;;;;;;;;;;;;;;
 
-;; This is used by some modes to initialize a file with some content.
-;; e.g. new files created in clojude-more starts with (ns ...)
-(use-package yasnippet
-  :ensure t
-  :hook (prog-mode . yas-minor-mode))
-
-;;(add-hook 'prog-mode-hook 'hs-minor-mode)
-;;(general-define-key
-;; :states 'normal
-;; :keymaps 'hs-minor-mode-map
-;; :prefix "SPC"
-;; "h"   '(:ignore t :which-key "hide/show")
-;; "h h" '(hs-hide-block :which-key "Hide block")
-;; "h H" '(hs-hide-all :which-key "Hide all")
-;; "h s" '(hs-show-block :which-key "Show block")
-;; "h S" '(hs-show-all :which-key "Show all"))
-
-;;(use-package lsp-mode
-;;  :ensure t
-;;  :commands (lsp lsp-deferred)
-;;  :hook ((lsp-mode . (lambda ()
-;;             (evil-local-set-key 'normal (kbd "g d") 'lsp-find-definition)
-;;             (evil-local-set-key 'normal (kbd "g r") 'lsp-find-references))))
-;;  :config
-;;  (lsp-enable-which-key-integration))
-;;
-;;(use-package lsp-ui
-;;  :ensure t
-;;  :hook (lsp-mode . lsp-ui-mode)
-;;  :custom
-;;  (lsp-ui-doc-position 'bottom))
-
 ;; Note: Before using the treesit modes, you need to run
 ;; M-x treesit-install-language-grammar
 (use-package treesit
@@ -306,14 +274,20 @@
                   (tsx        . ("https://github.com/tree-sitter/tree-sitter-typescript"
                                  "v0.20.4"
                                  "tsx/src"))
-                  (python     . ("https://github.com/tree-sitter/tree-sitter-python"))
-                  (json       . ("https://github.com/tree-sitter/tree-sitter-json")))))
+                  (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript"
+                                 "v0.21.4"))
+                  (python     . ("https://github.com/tree-sitter/tree-sitter-python"
+                                 "v0.21.0"))
+                  (json       . ("https://github.com/tree-sitter/tree-sitter-json"
+                                 "v0.21.0")))))
 
 (use-package treesit-fold
   :vc (:url "https://github.com/emacs-tree-sitter/treesit-fold" :rev "0.1.0")
   :hook ((python-ts-mode . treesit-fold-mode)
-         (jtsx-tsx-mode . treesit-fold-mode)
-         (jtsx-typescript-mode . treesit-fold-mode)
+         (tsx-ts-mode . treesit-fold-mode)
+         (typescript-ts-mode . treesit-fold-mode)
+         (js-ts-mode . treesit-fold-mode)
+         (json-ts-mode . treesit-fold-mode)
          (treesit-fold-mode . (lambda ()
                                 (general-define-key :prefix "SPC"
                                                     :states 'normal
@@ -323,12 +297,7 @@
                                                     "h H" 'treesit-fold-close-all
                                                     "h s" 'treesit-fold-open
                                                     "h S" 'treesit-fold-open-all
-                                                    "h t" 'treesit-fold-toggle))))
-  :config
-  (add-to-list 'treesit-fold-range-alist
-               `(jtsx-tsx-mode . ,(treesit-fold-parsers-typescript)))
-  (add-to-list 'treesit-fold-range-alist
-               `(jtsx-typescript-mode . ,(treesit-fold-parsers-typescript))))
+                                                    "h t" 'treesit-fold-toggle)))))
 
 (use-package eglot
   :ensure nil
@@ -337,11 +306,7 @@
   (tsx-ts-mode . eglot-ensure)
   (eglot-managed-mode . (lambda ()
                           (evil-local-set-key 'normal (kbd "g d") 'xref-find-definitions)
-                          (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)
-                          (setq eldoc-documentation-functions
-                                (cons #'flymake-eldoc-function
-                                      (remove #'flymake-eldoc-function eldoc-documentation-functions)))
-                          (setq eldoc-documentation-strategy #'eldoc-documentation-compose)))
+                          (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)))
   :config
   (add-to-list 'eglot-server-programs '(python-ts-mode . ("pyright-langserver" "--stdio")))
   (setq eglot-autoshutdown t))
@@ -350,6 +315,12 @@
 (use-package flymake
   :ensure nil
   :hook (prog-mode . flymake-mode))
+
+;; This is used by some modes to initialize a file with some content.
+;; e.g. new files created in clojude-more starts with (ns ...)
+(use-package yasnippet
+  :ensure t
+  :hook (prog-mode . yas-minor-mode))
 
 ;;(use-package flymake-eslint
 ;;  :ensure t
@@ -415,61 +386,42 @@
     "f b" '(ruff-format-buffer :which-key "buffer")
     "f r" '(ruff-format-region :which-key "region")))
 
-;;;;;;;;;;;;;;;;;;;
-;; End of Python ;;
-;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Typescript & Javascript ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;
-;; Typescript ;;
-;;;;;;;;;;;;;;;;
-
-(defun tk/ts-lint-buffer ()
-  (interactive)
-  (let ((command "npm run lint . ")
-        (current-file-path (buffer-file-name))
-        (default-directory "/Users/takamura/repos/comp/comp-app/"))
-    (compile (format "%s %s" command current-file-path))))
-
-(defun tk/ts-lint-project ()
-  (interactive)
-  (let ((command "npm run lint")
-        (default-directory "/Users/takamura/repos/comp/comp-app/"))
-    (compile command)))
-
-(use-package jtsx
-  :ensure t
-  :mode (("\\.tsx?\\'" . jtsx-tsx-mode)
-         ("\\.ts\\'" . jtsx-typescript-mode))
-  :hook ((jtsx-tsx-mode . hs-minor-mode)
-         (jtsx-typescript-mode . hs-minor-mode))
+(use-package typescript-ts-mode
+  :ensure nil
+  :mode (("\\.ts\\'" . typescript-ts-mode))
   :custom
-  (js-indent-level 2)
-  (typescript-ts-mode-indent-offset 2)
-  (jtsx-indent-statement-block-regarding-standalone-parent nil)
-  :config
-  (defun jtsx-bind-keys-to-mode-map (mode-map)
-    "Bind keys to MODE-MAP."
-    (map-local! mode-map
-      "f" '(:ignore t :which-key "format")
-      ;;"f b" '(prettier-prettify :which-key "buffer")
-      "l" '(tk/ts-lint-buffer :which-key "Lint buffer")
-      "L" '(tk/ts-lint-project :which-key "Lint proj")))
-  (defun jtsx-bind-keys-to-jtsx-tsx-mode ()
-    (jtsx-bind-keys-to-mode-map jtsx-tsx-mode-map))
-  (defun jtsx-bind-keys-to-jtsx-typescript-mode ()
-    (jtsx-bind-keys-to-mode-map jtsx-typescript-mode-map))
+  (typescript-ts-mode-indent-offset 2))
 
-  (add-hook 'jtsx-tsx-mode-hook 'jtsx-bind-keys-to-jtsx-tsx-mode)
-  (add-hook 'jtsx-typescript-mode-hook 'jtsx-bind-keys-to-jtsx-typescript-mode))
+(use-package tsx-ts-mode
+  :ensure nil
+  :mode (("\\.tsx\\'" . tsx-ts-mode))
+  :custom
+  (typescript-ts-mode-indent-offset 2))
+
+(use-package js-ts-mode
+  :ensure nil
+  :mode (("\\.jsx?\\'" . js-ts-mode))
+  :custom
+  (js-indent-level 2))
+
+(use-package json-ts-mode
+  :ensure nil
+  :mode (("\\.json\\'" . json-ts-mode)))
+
+(use-package prettier
+  :ensure t
+  :hook ((typescript-ts-mode . prettier-mode)
+         (tsx-ts-mode . prettier-mode)
+         (js-ts-mode . prettier-mode))
+  :custom
+  (prettier-mode-sync-config-flag nil))
 
 (use-package nvm
   :ensure t)
-
-;;(use-package prettier
-;;  :ensure t
-;;  ;;:hook ((jtsx-tsx-mode . prettier-mode)
-;;  ;;       (jtsx-typescript-mode . prettier-mode))
-;;  )
 
 ;;;;;;;;;;;
 ;;; misc ;;
@@ -595,7 +547,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages nil)
+ '(package-selected-packages
+   '(annalist company corfu embark-consult evil-escape
+              exec-path-from-shell general git-gutter-fringe
+              marginalia markdown-mode modus-themes no-littering
+              orderless pet prettier ruff-format smartparens spinner
+              tree-sitter treemacs-evil treemacs-projectile
+              treesit-fold vertico writeroom-mode yaml-mode yasnippet))
  '(package-vc-selected-packages
    '((ts-fold :url "https://github.com/emacs-tree-sitter/ts-fold"))))
 (custom-set-faces
