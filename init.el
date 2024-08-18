@@ -23,7 +23,19 @@
   :ensure t
   :config
   (setq auto-save-file-name-transforms
-        `((".*" ,(no-littering-expand-var-file-name "auto-save/")))))
+        `((".*" ,(no-littering-expand-var-file-name "auto-save/"))))
+  ;; Below doesn't belong to no-littering but since it has the same goal...
+  (make-directory (expand-file-name "tmp/auto-saves/" user-emacs-directory) t)
+
+  (setq backup-directory-alist
+        `(("." . ,(expand-file-name "tmp/backups/" user-emacs-directory)))
+
+        auto-save-list-file-prefix
+        (expand-file-name "tmp/auto-saves/sessions/" user-emacs-directory)
+
+        auto-save-file-name-transforms
+        `((".*" ,(expand-file-name "tmp/auto-saves/" user-emacs-directory) t))))
+
 
 (dolist (module '("preferences.el"
                   "tk-modeline.el"

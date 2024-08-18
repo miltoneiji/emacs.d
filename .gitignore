@@ -9,3 +9,5 @@ eln-cache/
 .DS_Store
 org-persist/
 elpa/
+tmp/
+tree-sitter/
