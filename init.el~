@@ -5,10 +5,6 @@
 
 ;;; Code:
 
-;; TODO 2024-08-06: Try using Emacs's default project manager?
-;; TODO 2024-08-09: Add narrow to modeline
-;; TODO 2024-08-10: modeline: save/not saved
-
 ;; Packages
 (require 'package)
 
@@ -30,7 +26,8 @@
         `((".*" ,(no-littering-expand-var-file-name "auto-save/")))))
 
 (dolist (module '("preferences.el"
-                  "tk-modeline.el"))
+                  "tk-modeline.el"
+                  "setup-org-mode.el"))
   (load (concat user-emacs-directory (format "modules/%s" module))))
 
 ;; ensure environmental variables inside Emacs look the same as in the user's shell
@@ -69,25 +66,36 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project management ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
-(defun tk/add-project-paths (paths)
-  "Add PATHS to projectile projects path if they exist."
-  (setq projectile-project-search-path
-        (seq-filter #'file-directory-p paths)))
+;;(defun tk/add-project-paths (paths)
+;;  "Add PATHS to projectile projects path if they exist."
+;;  (setq projectile-project-search-path
+;;        (seq-filter #'file-directory-p paths)))
 
 
-(use-package projectile
-  :ensure t
+;;(use-package projectile
+;;  :ensure t
+;;  :config
+;;  (projectile-mode +1)
+;;  (general-define-key :prefix "SPC"
+;;                      :states 'motion
+;;                      "p" '(:ignore t :which-key "project")
+;;                      "p p" '(projectile-switch-project :which-key "Switch project")
+;;                      "p l" '(projectile-discover-projects-in-search-path :which-key "Discover projects")
+;;                      "p i" '(projectile-invalidate-cache :which-key "Invalidate cache")
+;;                      "SPC" '(consult-fd :which-key "Find file")
+;;                      "p /" '(consult-ripgrep :which-key "Search"))
+;;  (tk/add-project-paths '("~/repos")))
+
+(defun tk/normal-keymap-set (key prefix-map which-key-text)
+  "Set KEY binding for PREFIX-MAP with WHICH-KEY-TEXT."
+  (keymap-set evil-normal-state-map
+              key prefix-map)
+  (which-key-add-key-based-replacements key which-key-text))
+
+(use-package project
+  :ensure nil
   :config
-  (projectile-mode +1)
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "p" '(:ignore t :which-key "project")
-                      "p p" '(projectile-switch-project :which-key "Switch project")
-                      "p l" '(projectile-discover-projects-in-search-path :which-key "Discover projects")
-                      "p i" '(projectile-invalidate-cache :which-key "Invalidate cache")
-                      "SPC" '(consult-fd :which-key "Find file")
-                      "p /" '(consult-ripgrep :which-key "Search"))
-  (tk/add-project-paths '("~/repos")))
+  (tk/normal-keymap-set "<SPC> p" project-prefix-map "project"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; File and project explorer ;;
@@ -104,6 +112,7 @@
   (treemacs-filewatch-mode t)
   (treemacs-fringe-indicator-mode 'always)
   (treemacs-no-png-images t)
+  (treemacs-wrap-around nil)
   :config
   (general-define-key :prefix "SPC"
                       :states 'motion
@@ -133,6 +142,8 @@
 ;; Preview, narrowing, grouping, search, etc.
 (use-package consult
   :ensure t
+  :custom
+  (consult-async-min-input 0)
   :config
   (with-eval-after-load 'xref
     (setq xref-show-xrefs-function #'consult-xref
@@ -153,8 +164,7 @@
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
   :ensure t
-  :config
-  (savehist-mode))
+  :config (savehist-mode))
 
 ;; This package provides an orderless completion style that divides the pattern into
 ;; space-separated components, and matches candidates that match all of the components
@@ -169,7 +179,7 @@
 ;; a minor mode that displays the key bindings following your currently entered incomplete
 ;; command in a popup.
 (use-package which-key
-  :ensure t
+  :ensure nil
   :config
   (which-key-mode)
   (which-key-setup-side-window-bottom)
@@ -198,14 +208,13 @@
 ;; Search ;;
 ;;;;;;;;;;;;
 
-;; TODO 2024-08-10: Start using isearch
-
 ;; consult-ripgrep:
 ;; - To narrow to specific file extensions: `#<find term>#\.tsx'
 ;; - To narrow to specific file path: `#<find term>#/path'
 
 (general-define-key :prefix "SPC"
                     :states 'motion
+                    "SPC" '(consult-fd :which-key "file")
                     "s" '(:ignore t :which-key "search")
                     "s l" '(consult-line :which-key "in file")
                     "s p" '(consult-ripgrep :which-key "in project")
@@ -292,13 +301,27 @@
   :config
   (setq-default treesit-language-source-alist
                 '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript"
-                                 "master"
+                                 "v0.20.4"
                                  "typescript/src"))
                   (tsx        . ("https://github.com/tree-sitter/tree-sitter-typescript"
-                                 "master"
+                                 "v0.20.4"
                                  "tsx/src"))
                   (python     . ("https://github.com/tree-sitter/tree-sitter-python"))
-                  (json       . ("https://github.com/tree-sitter/tree-sitter-json")))))
+                  (json       . ("https://github.com/tree-sitter/tree-sitter-json"))))
+  (dolist (mapping '((python-mode . python-ts-mode)))
+    (add-to-list 'major-mode-remap-alist mapping)))
+
+;;(use-package ts-fold
+;;  :ensure nil
+;;  :vc (:url "https://github.com/emacs-tree-sitter/ts-fold"))
+
+(use-package treesit-fold
+  :vc (:url "https://github.com/emacs-tree-sitter/treesit-fold")
+  :hook ((python-ts-mode . global-treesit-fold-indicators-mode)
+         (jtsx-tsx-mode . global-treesit-fold-indicators-mode)
+         (jtsx-typescript-mode . global-treesit-fold-indicators-mode))
+  :config
+  (global-treesit-fold-mode))
 
 (use-package eglot
   :ensure nil
@@ -306,8 +329,12 @@
   (typescript-ts-mode . eglot-ensure)
   (tsx-ts-mode . eglot-ensure)
   (eglot-managed-mode . (lambda ()
-                          (evil-local-set-key 'normal (kbd "g d") 'eglot-find-implementation)
-                          (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)))
+                          (evil-local-set-key 'normal (kbd "g d") 'xref-find-definitions)
+                          (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)
+                          (setq eldoc-documentation-functions
+                                (cons #'flymake-eldoc-function
+                                      (remove #'flymake-eldoc-function eldoc-documentation-functions)))
+                          (setq eldoc-documentation-strategy #'eldoc-documentation-compose)))
   :config
   (add-to-list 'eglot-server-programs '(python-ts-mode . ("pyright-langserver" "--stdio")))
   (setq eglot-autoshutdown t))
@@ -340,6 +367,7 @@
   :init
   (defun python-setup ()
     "Python setup."
+    (setq python-indent-offset 4)
     (general-define-key :prefix "SPC"
                         :keymaps 'python-base-mode-map
                         :states 'normal
@@ -554,12 +582,14 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(company corfu embark-consult evil-collection evil-escape
-             exec-path-from-shell general git-gutter-fringe jtsx
-             marginalia markdown-mode modus-themes no-littering
-             orderless pet prettier ruff-format smartparens spinner
-             treemacs-evil treemacs-projectile vertico writeroom-mode
-             yaml-mode yasnippet)))
+   '(annalist company corfu embark-consult evil-escape
+              exec-path-from-shell general git-gutter-fringe jtsx
+              marginalia markdown-mode modus-themes no-littering
+              orderless pet prettier ruff-format smartparens spinner
+              treemacs-evil treemacs-projectile vertico writeroom-mode
+              yaml-mode yasnippet))
+ '(package-vc-selected-packages
+   '((ts-fold :url "https://github.com/emacs-tree-sitter/ts-fold"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

@@ -112,6 +112,7 @@
   (treemacs-filewatch-mode t)
   (treemacs-fringe-indicator-mode 'always)
   (treemacs-no-png-images t)
+  (treemacs-wrap-around nil)
   :config
   (general-define-key :prefix "SPC"
                       :states 'motion
@@ -267,16 +268,16 @@
   :ensure t
   :hook (prog-mode . yas-minor-mode))
 
-(add-hook 'prog-mode-hook 'hs-minor-mode)
-(general-define-key
- :states 'normal
- :keymaps 'hs-minor-mode-map
- :prefix "SPC"
- "h"   '(:ignore t :which-key "hide/show")
- "h h" '(hs-hide-block :which-key "Hide block")
- "h H" '(hs-hide-all :which-key "Hide all")
- "h s" '(hs-show-block :which-key "Show block")
- "h S" '(hs-show-all :which-key "Show all"))
+;;(add-hook 'prog-mode-hook 'hs-minor-mode)
+;;(general-define-key
+;; :states 'normal
+;; :keymaps 'hs-minor-mode-map
+;; :prefix "SPC"
+;; "h"   '(:ignore t :which-key "hide/show")
+;; "h h" '(hs-hide-block :which-key "Hide block")
+;; "h H" '(hs-hide-all :which-key "Hide all")
+;; "h s" '(hs-show-block :which-key "Show block")
+;; "h S" '(hs-show-all :which-key "Show all"))
 
 ;;(use-package lsp-mode
 ;;  :ensure t
@@ -300,17 +301,34 @@
   :config
   (setq-default treesit-language-source-alist
                 '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript"
-                                 "master"
+                                 "v0.20.4"
                                  "typescript/src"))
                   (tsx        . ("https://github.com/tree-sitter/tree-sitter-typescript"
-                                 "master"
+                                 "v0.20.4"
                                  "tsx/src"))
                   (python     . ("https://github.com/tree-sitter/tree-sitter-python"))
                   (json       . ("https://github.com/tree-sitter/tree-sitter-json")))))
 
-(use-package ts-fold
-  :ensure nil
-  :load-path  "~/emacs.d/ts-fold")
+(use-package treesit-fold
+  :vc (:url "https://github.com/emacs-tree-sitter/treesit-fold" :rev "0.1.0")
+  :hook ((python-ts-mode . treesit-fold-mode)
+         (jtsx-tsx-mode . treesit-fold-mode)
+         (jtsx-typescript-mode . treesit-fold-mode)
+         (treesit-fold-mode . (lambda ()
+                                (general-define-key :prefix "SPC"
+                                                    :states 'normal
+                                                    :keymaps 'local
+                                                    "h" '(:ignore t :which-key "hide/show")
+                                                    "h h" 'treesit-fold-close
+                                                    "h H" 'treesit-fold-close-all
+                                                    "h s" 'treesit-fold-open
+                                                    "h S" 'treesit-fold-open-all
+                                                    "h t" 'treesit-fold-toggle))))
+  :config
+  (add-to-list 'treesit-fold-range-alist
+               `(jtsx-tsx-mode . ,(treesit-fold-parsers-typescript)))
+  (add-to-list 'treesit-fold-range-alist
+               `(jtsx-typescript-mode . ,(treesit-fold-parsers-typescript))))
 
 (use-package eglot
   :ensure nil
@@ -318,8 +336,12 @@
   (typescript-ts-mode . eglot-ensure)
   (tsx-ts-mode . eglot-ensure)
   (eglot-managed-mode . (lambda ()
-                          (evil-local-set-key 'normal (kbd "g d") 'eglot-find-implementation)
-                          (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)))
+                          (evil-local-set-key 'normal (kbd "g d") 'xref-find-definitions)
+                          (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)
+                          (setq eldoc-documentation-functions
+                                (cons #'flymake-eldoc-function
+                                      (remove #'flymake-eldoc-function eldoc-documentation-functions)))
+                          (setq eldoc-documentation-strategy #'eldoc-documentation-compose)))
   :config
   (add-to-list 'eglot-server-programs '(python-ts-mode . ("pyright-langserver" "--stdio")))
   (setq eglot-autoshutdown t))
@@ -421,6 +443,7 @@
   :hook ((jtsx-tsx-mode . hs-minor-mode)
          (jtsx-typescript-mode . hs-minor-mode))
   :custom
+  (js-indent-level 2)
   (typescript-ts-mode-indent-offset 2)
   (jtsx-indent-statement-block-regarding-standalone-parent nil)
   :config
@@ -508,6 +531,11 @@
   (interactive)
   (find-file user-init-file))
 
+(defun tk/open-inbox ()
+  "Open inbox.org."
+  (interactive)
+  (find-file-other-window "~/repos/org-directory/inbox.org"))
+
 (defun tk/load-config ()
   "Load my init.el."
   (interactive)
@@ -523,7 +551,8 @@
                     "f" '(:ignore t :which-key "file")
                     "f f" '(find-file :which-key "Find file")
                     "f p" '(tk/open-config :which-key "Open init.el")
-                    "f r" '(tk/load-config :which-key "Reload init.el"))
+                    "f r" '(tk/load-config :which-key "Reload init.el")
+                    "f i" '(tk/open-inbox :which-key "Inbox"))
 
 (general-define-key :prefix "SPC"
                     :states 'motion
@@ -566,7 +595,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages nil))
+ '(package-selected-packages nil)
+ '(package-vc-selected-packages
+   '((ts-fold :url "https://github.com/emacs-tree-sitter/ts-fold"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
