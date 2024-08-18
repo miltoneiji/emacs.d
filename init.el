@@ -78,25 +78,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project management ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
-;;(defun tk/add-project-paths (paths)
-;;  "Add PATHS to projectile projects path if they exist."
-;;  (setq projectile-project-search-path
-;;        (seq-filter #'file-directory-p paths)))
-
-
-;;(use-package projectile
-;;  :ensure t
-;;  :config
-;;  (projectile-mode +1)
-;;  (general-define-key :prefix "SPC"
-;;                      :states 'motion
-;;                      "p" '(:ignore t :which-key "project")
-;;                      "p p" '(projectile-switch-project :which-key "Switch project")
-;;                      "p l" '(projectile-discover-projects-in-search-path :which-key "Discover projects")
-;;                      "p i" '(projectile-invalidate-cache :which-key "Invalidate cache")
-;;                      "SPC" '(consult-fd :which-key "Find file")
-;;                      "p /" '(consult-ripgrep :which-key "Search"))
-;;  (tk/add-project-paths '("~/repos")))
 
 (defun tk/normal-keymap-set (key prefix-map which-key-text)
   "Set KEY binding for PREFIX-MAP with WHICH-KEY-TEXT."
@@ -559,13 +540,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(annalist company corfu embark-consult evil-escape
-              exec-path-from-shell general git-gutter-fringe
-              marginalia markdown-mode modus-themes no-littering
-              orderless pet prettier ruff-format smartparens spinner
-              tree-sitter treemacs-evil treemacs-projectile
-              treesit-fold vertico writeroom-mode yaml-mode yasnippet))
+ '(package-selected-packages nil)
  '(package-vc-selected-packages
    '((ts-fold :url "https://github.com/emacs-tree-sitter/ts-fold"))))
 (custom-set-faces
