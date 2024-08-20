@@ -75,6 +75,20 @@
   :keymaps 'override
   :prefix  ",")
 
+;;;;;;;;;;;;;;
+;; UndoTree ;;
+;;;;;;;;;;;;;;
+
+(use-package undo-tree
+  :ensure t
+  :config
+  (global-undo-tree-mode)
+  (setq undo-tree-history-directory-alist
+   '(("." . "~/.emacs.d/tmp/undo")))
+  :custom
+  (undo-tree-visualizer-diff t)
+  (undo-tree-auto-save-history t))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project management ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -268,7 +282,7 @@
                                  "v0.20.4"
                                  "tsx/src"))
                   (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript"
-                                 "v0.21.4"))
+                                 "v0.20.4"))
                   (python     . ("https://github.com/tree-sitter/tree-sitter-python"
                                  "v0.21.0"))
                   (json       . ("https://github.com/tree-sitter/tree-sitter-json"

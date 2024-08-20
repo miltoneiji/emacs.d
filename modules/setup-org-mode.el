@@ -1,6 +1,7 @@
 (use-package org
   :ensure nil
-  :hook ((org-mode . org-indent-mode))
+  :hook ((org-mode . org-indent-mode)
+         (org-mode . visual-line-mode))
   :config
   (setq org-directory "~/repos/org-directory"
         org-default-notes-file (concat org-directory "/notes.org"))

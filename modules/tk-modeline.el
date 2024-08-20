@@ -120,6 +120,34 @@ Truncation is done up to `tk/modeline-string-truncate-length'."
           (propertize (tk/modeline-major-mode-name)))))
 
 ;;;; VC branch
+(defun tk/open-in-github ()
+  "Testing stuff."
+  (interactive)
+  (let* ((repo-root (vc-root-dir))
+         (relative-path (file-relative-name buffer-file-name repo-root))
+         (line-number (if (use-region-p)
+                          (line-number-at-pos (region-beginning))
+                        (line-number-at-pos)))
+         (remote-url (string-trim (shell-command-to-string "git config --get remote.origin.url")))
+         (github-url (replace-regexp-in-string
+                      "\\.git$" ""
+                      (replace-regexp-in-string
+                       "^git@\\(.+?\\):" "https://\\1/"
+                       (replace-regexp-in-string
+                        "^https?://" ""
+                        remote-url))))
+         (final-url (format "%s/blob/main/%s#L%s"
+                            github-url
+                            relative-path
+                            line-number)))
+    (browse-url final-url)))
+
+(defvar tk/modeline-vc-branch-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mode-line down-mouse-1] 'tk/open-in-github)
+    map)
+  "Keymap to open file in GitHub.")
+
 (defun tk/modeline--vc-branch-name (file)
   "Return VC branch name for FILE if it exits, else return empty."
   (when-let ((backend (vc-backend file))
@@ -132,7 +160,8 @@ Truncation is done up to `tk/modeline-string-truncate-length'."
     '(:eval
       (if-let ((curr-window (mode-line-window-selected-p))
                (branch (tk/modeline--vc-branch-name (buffer-file-name))))
-          (propertize branch)))
+          (propertize branch
+                      'local-map tk/modeline-vc-branch-map)))
   "Mode line construct to return propertized VC branch.")
 
 ;;;; Flymake
