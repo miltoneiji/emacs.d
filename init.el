@@ -42,6 +42,9 @@
                   "setup-org-mode.el"))
   (load (concat user-emacs-directory (format "modules/%s" module))))
 
+;; Remember and restore the last cursor location of opened files
+(save-place-mode 1)
+
 ;; ensure environmental variables inside Emacs look the same as in the user's shell
 (use-package exec-path-from-shell
   :ensure t
@@ -54,11 +57,21 @@
 ;; evil
 (use-package evil
   :ensure t
+  :init
+  (setq evil-undo-system 'undo-tree)
   :config
   (evil-mode 1)
   :custom
+  ;; This is necessary for evil-collection
+  (evil-want-keybinding nil)
   ;; without this, TAB does not work properly
   (evil-want-C-i-jump nil))
+
+(use-package evil-collection
+  :ensure t
+  :after evil
+  :config
+  (evil-collection-init))
 
 (use-package evil-escape
   :ensure t
@@ -67,8 +80,9 @@
   :custom
   (evil-escape-key-sequence "jk"))
 
-;; Unbinding SPC since it will be used as a prefix
-(define-key evil-motion-state-map (kbd "SPC") nil)
+;; Defining my prefix command
+(define-prefix-command 'spc-prefix-map)
+(define-key evil-motion-state-map (kbd "SPC") 'spc-prefix-map)
 
 (general-create-definer map-local!
   :states  'motion
@@ -121,9 +135,7 @@
   (treemacs-no-png-images t)
   (treemacs-wrap-around nil)
   :config
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "p t" '(treemacs :which-key "Toggle file explorer")))
+  (define-key spc-prefix-map (kbd "p t") '("File explorer" . treemacs)))
 (use-package treemacs-evil
   :ensure t)
 (use-package treemacs-projectile
@@ -219,13 +231,12 @@
 ;; - To narrow to specific file extensions: `#<find term>#\.tsx'
 ;; - To narrow to specific file path: `#<find term>#/path'
 
-(general-define-key :prefix "SPC"
-                    :states 'motion
-                    "SPC" '(consult-fd :which-key "file")
-                    "s" '(:ignore t :which-key "search")
-                    "s l" '(consult-line :which-key "in file")
-                    "s p" '(consult-ripgrep :which-key "in project")
-                    "s f" '(consult-fd :which-key "file"))
+(define-key spc-prefix-map (kbd "SPC") '("search file" . consult-fd))
+(define-prefix-command 'tk-search-map)
+(define-key spc-prefix-map (kbd "s") '("search" . tk-search-map))
+(define-key tk-search-map (kbd "l") '("in file" . consult-line))
+(define-key tk-search-map (kbd "p") '("in project" . consult-ripgrep))
+(define-key tk-search-map (kbd "f") '("file in project" . consult-fd))
 
 ;;;;;;;;;;;
 ;; Theme ;;
@@ -241,10 +252,7 @@
         modus-themes-bold-constructs nil
         modus-themes-italic-constructs t)
   (modus-themes-load-theme (car modus-themes-to-toggle))
-
-  (general-define-key :prefix "SPC"
-                      :states 'motion
-                      "t t" '(modus-themes-toggle :which-key "Toggle theme")))
+  (define-key spc-prefix-map (kbd "t t") '("Toggle theme" . modus-themes-toggle)))
 
 ;;;;;;;;;;
 ;; Font ;;
@@ -268,6 +276,9 @@
 ;;;;;;;;;;;;;;;;;
 ;; Development ;;
 ;;;;;;;;;;;;;;;;;
+
+(use-package magit
+  :ensure t)
 
 ;; Note: Before using the treesit modes, you need to run
 ;; M-x treesit-install-language-grammar
@@ -328,20 +339,6 @@
 (use-package yasnippet
   :ensure t
   :hook (prog-mode . yas-minor-mode))
-
-;;(use-package flymake-eslint
-;;  :ensure t
-;;  :functions flymake-eslint-enable
-;;  :preface
-;;  (defun me/flymake-eslint-enable-maybe ()
-;;    "Enable `flymake-eslint' based on the project configuration.
-;;Search for the project ESLint configuration to determine whether the buffer
-;;should be checked."
-;;    (when-let* ((root (locate-dominating-file (buffer-file-name) "package.json"))
-;;                (rc (locate-file ".eslintrc" (list root) '(".js" ".json"))))
-;;      (make-local-variable 'exec-path)
-;;      (push (file-name-concat root "node_modules" ".bin") exec-path)
-;;      (flymake-eslint-enable))))
 
 ;;;;;;;;;;;;
 ;; Python ;;
@@ -430,6 +427,14 @@
 (use-package nvm
   :ensure t)
 
+(use-package emacs
+  :ensure nil
+  :config
+  (define-derived-mode mdx-mode tsx-ts-mode "mdx"
+    "A major mode derived from tsx-ts-mode for editing .mdx files.")
+  :mode
+  ("\\.mdx\\'" . mdx-mode))
+
 ;;;;;;;;;;;
 ;;; misc ;;
 ;;;;;;;;;;;
@@ -500,10 +505,24 @@
   (interactive)
   (load-file user-init-file))
 
+;; So that I can restore my window configuration
+(winner-mode 1)
+(defun tk/toggle-maximized-buffer ()
+  "Toggle between maximizing the current buffer and restoring the previous window configuration."
+  (interactive)
+  (if (and (boundp 'winner-mode) winner-mode)
+      (if (equal (selected-window) (next-window))
+          (winner-undo)
+        (delete-other-windows))
+    (error "winner-mode is not enabled")))
+
 ;; Common key bindings
 (define-key evil-motion-state-map (kbd "SPC TAB") '("Previous" . evil-switch-to-windows-last-buffer))
 (define-key evil-motion-state-map (kbd "SPC :")   '("M-:" . execute-extended-command))
 (define-key evil-motion-state-map (kbd "SPC ;")   '("Eval expression" . pp-eval-expression))
+
+(define-key evil-motion-state-map (kbd "C-p") '("jump forward" . evil-jump-forward))
+(define-key evil-motion-state-map (kbd "C-o") '("jump backward" . evil-jump-backward))
 
 (general-define-key :prefix "SPC"
                     :states 'motion
@@ -531,7 +550,8 @@
                     :states 'motion
                     "t" '(:ignore t :which-key "toggle")
                     "t r" '(toggle-truncate-lines :which-key "Toggle truncate lines")
-                    "t l" '(display-line-numbers-mode :which-key "Toggle line number"))
+                    "t l" '(display-line-numbers-mode :which-key "Toggle line number")
+                    "t f" '(tk/toggle-maximized-buffer :which-key "Fullscreen"))
 
 (general-define-key :prefix "SPC"
                     :states 'motion
