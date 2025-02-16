@@ -116,7 +116,24 @@
 (use-package project
   :ensure nil
   :config
+  ;; When working in a monorepo, you may want to create a different project for each
+  ;; subrepo inside the monorepo. In this case, create a `.project' file in each one of
+  ;; the subrepos.
+  (setq project-vc-extra-root-markers '(".project"))
   (tk/normal-keymap-set "<SPC> p" project-prefix-map "project"))
+
+;;;;;;;;;
+;; LLM ;;
+;;;;;;;;;
+
+(use-package gptel
+  :ensure t
+  :config
+  (setq gptel-backend (gptel-make-ollama "Ollama"
+                        :host "localhost:11434"
+                        :stream t
+                        ;; https://ollama.com/library?sort=newest
+                        :models '("codeqwen"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; File and project explorer ;;
