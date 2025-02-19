@@ -155,8 +155,6 @@
   (define-key spc-prefix-map (kbd "p t") '("File explorer" . treemacs)))
 (use-package treemacs-evil
   :ensure t)
-(use-package treemacs-projectile
-  :ensure t)
 
 ;;;;;;;;;;;;;;;;;
 ;;; Minibuffer ;;
@@ -262,8 +260,8 @@
 (use-package modus-themes
   :ensure t
   :config
-  (setq modus-themes-to-toggle '(modus-vivendi modus-operandi)
-        ;;modus-themes-to-toggle '(modus-vivendi-tinted modus-operandi-tinted)
+  (setq ;;modus-themes-to-toggle '(modus-vivendi modus-operandi)
+        modus-themes-to-toggle '(modus-vivendi-tinted modus-operandi-tinted)
         ;;modus-themes-to-toggle '(modus-vivendi-deuteranopia modus-operandi-deuteranopia)
         ;;modus-themes-to-toggle '(modus-vivendi-tritanopia modus-operandi-tritanopia)
         modus-themes-bold-constructs nil
@@ -502,7 +500,6 @@
   :config
   (setq writeroom-width 120))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Other key bindings ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -591,7 +588,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages nil)
+ '(package-selected-packages
+   '(corfu embark-consult evil-collection evil-escape
+           exec-path-from-shell general git-gutter-fringe gptel magit
+           marginalia markdown-mode modus-themes no-littering
+           orderless org-appear pet prettier ruff-format smartparens
+           treemacs-evil treesit-fold undo-tree vertico writeroom-mode
+           yaml-mode yasnippet))
  '(package-vc-selected-packages
    '((ts-fold :url "https://github.com/emacs-tree-sitter/ts-fold"))))
 (custom-set-faces
