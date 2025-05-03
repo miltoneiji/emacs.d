@@ -126,14 +126,64 @@
 ;; LLM ;;
 ;;;;;;;;;
 
+(defun tk/read-file (file-path)
+  "Read the entire contents of FILE-PATH into a string."
+  (with-temp-buffer
+    (insert-file-contents file-path)
+    (buffer-string)))
+
 (use-package gptel
   :ensure t
+  :init
+  (setq gptel-directives
+        `((default . ,(tk/read-file "~/repos/emacs.d/directives/default"))
+          (emacs   . ,(tk/read-file "~/repos/emacs.d/directives/emacs"))
+          (llm     . ,(tk/read-file "~/repos/emacs.d/directives/llm"))))
   :config
-  (setq gptel-backend (gptel-make-ollama "Ollama"
-                        :host "localhost:11434"
-                        :stream t
-                        ;; https://ollama.com/library?sort=newest
-                        :models '("codeqwen"))))
+  (gptel-make-ollama "Ollama"
+    :host "192.168.15.11:11434"
+    :stream t
+    :models '("qwen2.5-coder:32b"))
+
+  (gptel-make-openai "OpenRouter"
+    :host "openrouter.ai"
+    :endpoint "/api/v1/chat/completions"
+    :stream t
+    :key (tk/read-file "~/repos/emacs.d/open_router_api_key")
+    :models '("qwen/qwen3-32b:free" "qwen/qwen3-235b-a22b:free"))
+
+  (defun tk/gptel-get-backend (key)
+    (alist-get key gptel--known-backends nil nil 'string=))
+
+  (setq gptel-backend (tk/gptel-get-backend "OpenRouter"))
+  (setq gptel-model 'qwen3-32b:free)
+
+  ;; 0.0 -> 2.0, with 2.0 being the most random.
+  (setq gptel-temperature 1.0)
+  (setq gptel-include-reasoning nil)
+
+  (gptel-make-tool
+   :name "read_buffer"
+   :description "return the contents of an emacs buffer"
+   :function (lambda (buffer)
+               (unless (buffer-live-p (get-buffer buffer))
+                 (error "error: buffer %s is not live." buffer))
+               (with-current-buffer buffer
+                 (buffer-substring-no-properties (point-min) (point-max))))
+   :args (list '(:name "buffer" :type string :description "the name of the buffer whose contents are to be retrieved")))
+
+  (gptel-make-tool
+   :name "create_file"
+   :description "Create a new file with the specified content"
+   :function (lambda (path filename content)
+               (let ((full-path (expand-file-name filename path)))
+                 (with-temp-buffer
+                   (insert content)
+                   (write-file full-path))
+                 (format "Created file %s in %s" filename path)))
+   :args (list '(:name "path" :type string :description "The directory where to create the file")
+               '(:name "filename" :type string :description "The name of the file to create")
+               '(:name "content" :type string :description "The content to write to the file"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; File and project explorer ;;
@@ -260,8 +310,8 @@
 (use-package modus-themes
   :ensure t
   :config
-  (setq ;;modus-themes-to-toggle '(modus-vivendi modus-operandi)
-        modus-themes-to-toggle '(modus-vivendi-tinted modus-operandi-tinted)
+  (setq modus-themes-to-toggle '(modus-vivendi modus-operandi)
+        ;;modus-themes-to-toggle '(modus-vivendi-tinted modus-operandi-tinted)
         ;;modus-themes-to-toggle '(modus-vivendi-deuteranopia modus-operandi-deuteranopia)
         ;;modus-themes-to-toggle '(modus-vivendi-tritanopia modus-operandi-tritanopia)
         modus-themes-bold-constructs nil
@@ -275,7 +325,8 @@
 
 (set-face-attribute 'default nil :font "Fira Code Retina" :height 200)
 (set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height 200)
-(set-face-attribute 'variable-pitch nil :font "Cantarell" :height 200)
+;;(set-face-attribute 'variable-pitch nil :font "Cantarell" :height 200)
+(set-face-attribute 'variable-pitch nil :font "Fira Code Retina" :height 200)
 
 ;;;;;;;;;;;
 ;; Elisp ;;
@@ -456,6 +507,8 @@
 
 (use-package markdown-mode
   :ensure t
+  :config
+  (add-hook 'markdown-mode-hook 'turn-off-auto-fill)
   :custom
   (markdown-hide-urls t))
 
@@ -553,12 +606,6 @@
                     "b d" '(kill-buffer :which-key "Kill buffer")
                     "b p" '(previous-buffer :which-key "Previous buffer")
                     "b n" '(next-buffer :which-key "Next buffer"))
-
-(general-define-key :prefix "SPC"
-                    :states 'motion
-                    "u" '(:ignore t :which-key "util")
-                    "u g" '(straight-freeze-versions :which-key "Generate lockfile")
-                    "u e" '(straight-thaw-versions :which-key "Ensure lockfile"))
 
 (general-define-key :prefix "SPC"
                     :states 'motion
