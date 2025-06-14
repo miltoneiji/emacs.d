@@ -174,7 +174,8 @@
           (insert "\n```\n\n")
           (insert PROMPT)
           (goto-char (point-max))
-          (markdown-mode))
+          (markdown-mode)
+          (gptel-mode))
         (display-buffer llm-buffer '(display-buffer-in-side-window
                                      (side . right)
                                      (window-width . 0.5)))
@@ -195,7 +196,7 @@
 (defun llm/review-code ()
   "Review code and give suggestions on how to improve it."
   (interactive)
-  (llm/common "Review this code and give suggestions on how to make it clearer, more maintainable, and performatic."))
+  (llm/common "Review this code and give suggestions on how to make it clearer, more maintainable, and performatic. Additionally, search for bugs in it."))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
