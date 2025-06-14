@@ -150,7 +150,7 @@
     :endpoint "/api/v1/chat/completions"
     :stream t
     :key (tk/read-file "~/repos/emacs.d/open_router_api_key")
-    :models '("qwen/qwen3-32b:free" "qwen/qwen3-235b-a22b:free"))
+    :models '("deepseek/deepseek-r1-0528-qwen3-8b:free"))
 
   (defun tk/gptel-get-backend (key)
     (alist-get key gptel--known-backends nil nil 'string=))
@@ -160,30 +160,43 @@
 
   ;; 0.0 -> 2.0, with 2.0 being the most random.
   (setq gptel-temperature 1.0)
-  (setq gptel-include-reasoning nil)
+  (setq gptel-include-reasoning nil))
 
-  (gptel-make-tool
-   :name "read_buffer"
-   :description "return the contents of an emacs buffer"
-   :function (lambda (buffer)
-               (unless (buffer-live-p (get-buffer buffer))
-                 (error "error: buffer %s is not live." buffer))
-               (with-current-buffer buffer
-                 (buffer-substring-no-properties (point-min) (point-max))))
-   :args (list '(:name "buffer" :type string :description "the name of the buffer whose contents are to be retrieved")))
+(defun llm/common (PROMPT)
+  "Common method used to call gptel using PROMPT."
+  (if (use-region-p)
+      (let ((code (buffer-substring-no-properties (region-beginning) (region-end)))
+            (llm-buffer (get-buffer-create "*LLM*")))
+        (with-current-buffer llm-buffer
+          (erase-buffer)
+          (insert "Given the following:\n\n```")
+          (insert code)
+          (insert "\n```\n\n")
+          (insert PROMPT)
+          (goto-char (point-max))
+          (markdown-mode))
+        (display-buffer llm-buffer '(display-buffer-in-side-window
+                                     (side . right)
+                                     (window-width . 0.5)))
+        (with-current-buffer llm-buffer
+          (gptel-send)))
+    (message "No region selected. Please select some region")))
 
-  (gptel-make-tool
-   :name "create_file"
-   :description "Create a new file with the specified content"
-   :function (lambda (path filename content)
-               (let ((full-path (expand-file-name filename path)))
-                 (with-temp-buffer
-                   (insert content)
-                   (write-file full-path))
-                 (format "Created file %s in %s" filename path)))
-   :args (list '(:name "path" :type string :description "The directory where to create the file")
-               '(:name "filename" :type string :description "The name of the file to create")
-               '(:name "content" :type string :description "The content to write to the file"))))
+(defun llm/explain-code ()
+  "Explain the selected code using gptel."
+  (interactive)
+  (llm/common "Provide a clear, concise explanation of the code's functionality, including what it does step by step."))
+
+(defun llm/rewrite-code-comment ()
+  "Rewrite code comment using gptel."
+  (interactive)
+  (llm/common "Rewrite this comment to make it clear and succint."))
+
+(defun llm/review-code ()
+  "Review code and give suggestions on how to improve it."
+  (interactive)
+  (llm/common "Review this code and give suggestions on how to make it clearer, more maintainable, and performatic."))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; File and project explorer ;;
@@ -482,13 +495,13 @@
   :ensure nil
   :mode (("\\.json\\'" . json-ts-mode)))
 
-(use-package prettier
+;; Debt: I am relying on a global installation of Biome.
+;; It's probably using the default settings, not the project settings.
+(use-package biomejs-format
   :ensure t
-  :hook ((typescript-ts-mode . prettier-mode)
-         (tsx-ts-mode . prettier-mode)
-         (js-ts-mode . prettier-mode))
-  :custom
-  (prettier-mode-sync-config-flag nil))
+  :hook ((typescript-ts-mode . biomejs-format-mode)
+         (tsx-ts-mode . biomejs-format-mode)
+         (js-ts-mode . biomejs-format-mode)))
 
 (use-package nvm
   :ensure t)
@@ -635,13 +648,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(corfu embark-consult evil-collection evil-escape
-           exec-path-from-shell general git-gutter-fringe gptel magit
-           marginalia markdown-mode modus-themes no-littering
-           orderless org-appear pet prettier ruff-format smartparens
-           treemacs-evil treesit-fold undo-tree vertico writeroom-mode
-           yaml-mode yasnippet))
+ '(package-selected-packages nil)
  '(package-vc-selected-packages
    '((ts-fold :url "https://github.com/emacs-tree-sitter/ts-fold"))))
 (custom-set-faces
