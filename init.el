@@ -42,6 +42,11 @@
                   "setup-org-mode.el"))
   (load (concat user-emacs-directory (format "modules/%s" module))))
 
+;; Load secrets if available
+(when (file-exists-p (expand-file-name "secrets.el" user-emacs-directory))
+  (load (expand-file-name "secrets.el" user-emacs-directory)))
+
+
 ;; Remember and restore the last cursor location of opened files
 (save-place-mode 1)
 
@@ -137,6 +142,8 @@
 (use-package claude-code :ensure t
   :vc (:url "https://github.com/stevemolitor/claude-code.el" :rev :newest)
   :config
+  (when (fboundp 'tk/get-claude-code-env-vars)
+    (add-hook 'claude-code-process-environment-functions 'tk/get-claude-code-env-vars))
 
   (claude-code-mode)
   :bind-keymap ("C-c c" . claude-code-command-map)
