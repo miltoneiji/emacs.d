@@ -145,12 +145,19 @@
   (when (fboundp 'tk/get-claude-code-env-vars)
     (add-hook 'claude-code-process-environment-functions 'tk/get-claude-code-env-vars))
 
-  (claude-code-mode)
-  :bind-keymap ("C-c c" . claude-code-command-map)
+  ;; Automatically select the Claude buffer when toggling it open (default is nil)
+  ;; When set to t, claude-code-toggle will switch focus to the Claude buffer
+  ;; after displaying it. When nil, the buffer is displayed but focus remains
+  ;; in the current buffer.
+  (setq claude-code-toggle-auto-select t)
 
-  ;; Optionally define a repeat map so that "M" will cycle thru Claude auto-accept/plan/confirm modes after invoking claude-code-cycle-mode / C-c M.
-  :bind
-  (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode)))
+  (add-to-list 'display-buffer-alist
+                 '("^\\*claude"
+                   (display-buffer-in-side-window)
+                   (side . right)
+                   (window-width . 90)))
+
+  (claude-code-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -587,6 +594,17 @@
                     "n" '(:ignore t :which-key "narrowing")
                     "n r" '(narrow-to-region :which-key "region")
                     "n q" '(widen :which-key "quit narrowing"))
+
+(general-define-key :prefix "SPC"
+                    :states 'motion
+                    "j" '(:ignore t :which-key "claude")
+                    "j t" '(claude-code-toggle :which-key "Toggle")
+                    "j s" '(claude-code :which-key "Start")
+                    "j S" '(claude-code-kill :which-key "Stop")
+                    "j a" '(claude-code-send-command-with-context :which-key "with ctx")
+                    "j r" '(claude-code-send-region :which-key "region"))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows resizing ;;
