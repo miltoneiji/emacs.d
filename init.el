@@ -271,21 +271,6 @@
   (corfu-auto-delay 0.0)
   (corfu-echo-documentation 0.25))
 
-;;;;;;;;;;;;
-;; Search ;;
-;;;;;;;;;;;;
-
-;; consult-ripgrep:
-;; - To narrow to specific file extensions: `#<find term>#\.tsx'
-;; - To narrow to specific file path: `#<find term>#/path'
-
-(define-key spc-prefix-map (kbd "SPC") '("search file" . consult-fd))
-(define-prefix-command 'tk-search-map)
-(define-key spc-prefix-map (kbd "s") '("search" . tk-search-map))
-(define-key tk-search-map (kbd "l") '("in file" . consult-line))
-(define-key tk-search-map (kbd "p") '("in project" . consult-ripgrep))
-(define-key tk-search-map (kbd "f") '("file in project" . consult-fd))
-
 ;;;;;;;;;;;
 ;; Theme ;;
 ;;;;;;;;;;;
@@ -585,6 +570,14 @@
                     "j S" '(claude-code-kill :which-key "Stop")
                     "j a" '(claude-code-send-command-with-context :which-key "with ctx")
                     "j r" '(claude-code-send-region :which-key "region"))
+
+(general-define-key :prefix "SPC"
+                    :states 'motion
+                    "SPC" '(consult-fd :which-key "file")
+                    "s" '(:ignore t :which-key "search")
+                    "s l" '(consult-line :which-key "consult-line")
+                    "s p" '(consult-ripgrep :which-key "project")
+                    "s f" '(consult-fd :which-key "file"))
 
 
 
