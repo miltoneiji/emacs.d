@@ -1,2 +1,3 @@
 ;;; -*- lisp-data -*-
-(("/Users/takamura/.emacs.d/"))
+(("/Users/takamura/.emacs.d/elpa/inheritenv/")
+ ("/Users/takamura/.emacs.d/"))

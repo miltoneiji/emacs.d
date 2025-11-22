@@ -126,77 +126,24 @@
 ;; LLM ;;
 ;;;;;;;;;
 
-(defun tk/read-file (file-path)
-  "Read the entire contents of FILE-PATH into a string."
-  (with-temp-buffer
-    (insert-file-contents file-path)
-    (buffer-string)))
+;; install required inheritenv dependency:
+(use-package inheritenv
+  :vc (:url "https://github.com/purcell/inheritenv" :rev :newest))
 
-(use-package gptel
-  :ensure t
-  :init
-  (setq gptel-directives
-        `((default . ,(tk/read-file "~/repos/emacs.d/directives/default"))
-          (emacs   . ,(tk/read-file "~/repos/emacs.d/directives/emacs"))
-          (llm     . ,(tk/read-file "~/repos/emacs.d/directives/llm"))))
+;; for eat terminal backend:
+(use-package eat :ensure t)
+
+;; install claude-code.el
+(use-package claude-code :ensure t
+  :vc (:url "https://github.com/stevemolitor/claude-code.el" :rev :newest)
   :config
-  (gptel-make-ollama "Ollama"
-    :host "192.168.15.11:11434"
-    :stream t
-    :models '("qwen2.5-coder:32b"))
 
-  (gptel-make-openai "OpenRouter"
-    :host "openrouter.ai"
-    :endpoint "/api/v1/chat/completions"
-    :stream t
-    :key (tk/read-file "~/repos/emacs.d/open_router_api_key")
-    :models '("deepseek/deepseek-r1-0528-qwen3-8b:free"))
+  (claude-code-mode)
+  :bind-keymap ("C-c c" . claude-code-command-map)
 
-  (defun tk/gptel-get-backend (key)
-    (alist-get key gptel--known-backends nil nil 'string=))
-
-  (setq gptel-backend (tk/gptel-get-backend "OpenRouter"))
-  (setq gptel-model 'qwen3-32b:free)
-
-  ;; 0.0 -> 2.0, with 2.0 being the most random.
-  (setq gptel-temperature 1.0)
-  (setq gptel-include-reasoning nil))
-
-(defun llm/common (PROMPT)
-  "Common method used to call gptel using PROMPT."
-  (if (use-region-p)
-      (let ((code (buffer-substring-no-properties (region-beginning) (region-end)))
-            (llm-buffer (get-buffer-create "*LLM*")))
-        (with-current-buffer llm-buffer
-          (erase-buffer)
-          (insert "Given the following:\n\n```")
-          (insert code)
-          (insert "\n```\n\n")
-          (insert PROMPT)
-          (goto-char (point-max))
-          (markdown-mode)
-          (gptel-mode))
-        (display-buffer llm-buffer '(display-buffer-in-side-window
-                                     (side . right)
-                                     (window-width . 0.5)))
-        (with-current-buffer llm-buffer
-          (gptel-send)))
-    (message "No region selected. Please select some region")))
-
-(defun llm/explain-code ()
-  "Explain the selected code using gptel."
-  (interactive)
-  (llm/common "Provide a clear, concise explanation of the code's functionality, including what it does step by step."))
-
-(defun llm/rewrite-code-comment ()
-  "Rewrite code comment using gptel."
-  (interactive)
-  (llm/common "Rewrite this comment to make it clear and succint."))
-
-(defun llm/review-code ()
-  "Review code and give suggestions on how to improve it."
-  (interactive)
-  (llm/common "Review this code and give suggestions on how to make it clearer, more maintainable, and performatic. Additionally, search for bugs in it."))
+  ;; Optionally define a repeat map so that "M" will cycle thru Claude auto-accept/plan/confirm modes after invoking claude-code-cycle-mode / C-c M.
+  :bind
+  (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -649,7 +596,14 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages nil)
+ '(package-selected-packages
+   '(biomejs-format claude-code corfu eat embark-consult evil-collection
+                    evil-escape exec-path-from-shell general
+                    git-gutter-fringe gptel iter2 magit marginalia
+                    markdown-mode modus-themes no-littering nvm
+                    orderless org-appear pet ruff-format smartparens
+                    treemacs-evil treesit-fold undo-tree vertico
+                    writeroom-mode yaml-mode yasnippet))
  '(package-vc-selected-packages
    '((ts-fold :url "https://github.com/emacs-tree-sitter/ts-fold"))))
 (custom-set-faces
