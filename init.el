@@ -37,10 +37,18 @@
         `((".*" ,(expand-file-name "tmp/auto-saves/" user-emacs-directory) t))))
 
 
-(dolist (module '("preferences.el"
-                  "tk-modeline.el"
-                  "setup-org-mode.el"))
-  (load (concat user-emacs-directory (format "modules/%s" module))))
+;; Module loading
+(defun tk/load-module (module-name)
+  "Load MODULE-NAME from modules directory with error handling."
+  (let ((file (concat user-emacs-directory "modules/" module-name)))
+    (condition-case err
+        (load file)
+      (error (message "Failed to load %s: %s" module-name err)))))
+
+(mapc #'tk/load-module
+      '("preferences"
+        "tk-modeline"
+        "setup-org-mode"))
 
 ;; Load secrets if available
 (when (file-exists-p (expand-file-name "secrets.el" user-emacs-directory))
@@ -291,8 +299,7 @@
         ;;modus-themes-to-toggle '(modus-vivendi-tritanopia modus-operandi-tritanopia)
         modus-themes-bold-constructs nil
         modus-themes-italic-constructs t)
-  (modus-themes-load-theme (car modus-themes-to-toggle))
-  (define-key spc-prefix-map (kbd "t t") '("Toggle theme" . modus-themes-toggle)))
+  (modus-themes-load-theme (car modus-themes-to-toggle)))
 
 ;;;;;;;;;;
 ;; Font ;;
@@ -468,14 +475,6 @@
 (use-package nvm
   :ensure t)
 
-(use-package emacs
-  :ensure nil
-  :config
-  (define-derived-mode mdx-mode tsx-ts-mode "mdx"
-    "A major mode derived from tsx-ts-mode for editing .mdx files.")
-  :mode
-  ("\\.mdx\\'" . mdx-mode))
-
 ;;;;;;;;;;;
 ;;; misc ;;
 ;;;;;;;;;;;
@@ -537,26 +536,10 @@
   (interactive)
   (find-file user-init-file))
 
-(defun tk/open-inbox ()
-  "Open inbox.org."
-  (interactive)
-  (find-file-other-window "~/repos/org-directory/inbox.org"))
-
 (defun tk/load-config ()
   "Load my init.el."
   (interactive)
   (load-file user-init-file))
-
-;; So that I can restore my window configuration
-(winner-mode 1)
-(defun tk/toggle-maximized-buffer ()
-  "Toggle between maximizing the current buffer and restoring the previous window configuration."
-  (interactive)
-  (if (and (boundp 'winner-mode) winner-mode)
-      (if (equal (selected-window) (next-window))
-          (winner-undo)
-        (delete-other-windows))
-    (error "winner-mode is not enabled")))
 
 ;; Common key bindings
 (define-key evil-motion-state-map (kbd "SPC TAB") '("Previous" . evil-switch-to-windows-last-buffer))
@@ -571,8 +554,7 @@
                     "f" '(:ignore t :which-key "file")
                     "f f" '(find-file :which-key "Find file")
                     "f p" '(tk/open-config :which-key "Open init.el")
-                    "f r" '(tk/load-config :which-key "Reload init.el")
-                    "f i" '(tk/open-inbox :which-key "Inbox"))
+                    "f r" '(tk/load-config :which-key "Reload init.el"))
 
 (general-define-key :prefix "SPC"
                     :states 'motion
@@ -587,7 +569,7 @@
                     "t" '(:ignore t :which-key "toggle")
                     "t r" '(toggle-truncate-lines :which-key "Toggle truncate lines")
                     "t l" '(display-line-numbers-mode :which-key "Toggle line number")
-                    "t f" '(tk/toggle-maximized-buffer :which-key "Fullscreen"))
+                    "t t" '(modus-themes-toggle :which-key "dark/light theme"))
 
 (general-define-key :prefix "SPC"
                     :states 'motion
