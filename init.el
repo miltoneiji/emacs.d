@@ -48,7 +48,8 @@
 (mapc #'tk/load-module
       '("preferences"
         "tk-modeline"
-        "setup-org-mode"))
+        "setup-org-mode"
+        "tk-location-tags"))
 
 ;; Load secrets if available
 (when (file-exists-p (expand-file-name "secrets.el" user-emacs-directory))
@@ -579,7 +580,17 @@
                     "s p" '(consult-ripgrep :which-key "project")
                     "s f" '(consult-fd :which-key "file"))
 
-
+(general-define-key :prefix "SPC"
+                    :states 'motion
+                    "m" '(:ignore t :which-key "marks/tags")
+                    "m m" '(tk/location-tag-add :which-key "Tag location")
+                    "m d" '(tk/location-tag-remove-at-point :which-key "Remove tag")
+                    "m j" '(tk/location-tag-jump :which-key "Jump to tag")
+                    "m n" '(tk/location-tag-next :which-key "Next tag")
+                    "m p" '(tk/location-tag-previous :which-key "Previous tag")
+                    "m l" '(tk/location-tag-list :which-key "List tags")
+                    "m c" '(tk/location-tag-clear-all :which-key "Clear all tags")
+                    "m s" '(tk/location-tag-save-to-disk :which-key "Save tags"))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows resizing ;;
