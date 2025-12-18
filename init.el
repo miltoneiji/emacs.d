@@ -279,9 +279,9 @@
 (use-package modus-themes
   :ensure t
   :config
-  (setq modus-themes-to-toggle '(modus-vivendi modus-operandi)
+  (setq ;;modus-themes-to-toggle '(modus-vivendi modus-operandi)
         ;;modus-themes-to-toggle '(modus-vivendi-tinted modus-operandi-tinted)
-        ;;modus-themes-to-toggle '(modus-vivendi-deuteranopia modus-operandi-deuteranopia)
+        modus-themes-to-toggle '(modus-vivendi-deuteranopia modus-operandi-deuteranopia)
         ;;modus-themes-to-toggle '(modus-vivendi-tritanopia modus-operandi-tritanopia)
         modus-themes-bold-constructs nil
         modus-themes-italic-constructs t)
@@ -321,17 +321,17 @@
   :config
   (setq-default treesit-language-source-alist
                 '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript"
-                                 "v0.20.4"
+                                 "v0.23.2"
                                  "typescript/src"))
                   (tsx        . ("https://github.com/tree-sitter/tree-sitter-typescript"
-                                 "v0.20.4"
+                                 "v0.23.2"
                                  "tsx/src"))
                   (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript"
-                                 "v0.20.4"))
+                                 "v0.23.1"))
                   (python     . ("https://github.com/tree-sitter/tree-sitter-python"
-                                 "v0.21.0"))
+                                 "v0.23.6"))
                   (json       . ("https://github.com/tree-sitter/tree-sitter-json"
-                                 "v0.21.0")))))
+                                 "v0.24.8")))))
 
 (use-package treesit-fold
   :vc (:url "https://github.com/emacs-tree-sitter/treesit-fold" :rev "0.1.0")
@@ -361,6 +361,9 @@
                           (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)))
   :config
   (add-to-list 'eglot-server-programs '(python-ts-mode . ("pyright-langserver" "--stdio")))
+  (add-to-list 'eglot-server-programs
+    '((typescript-ts-mode tsx-ts-mode js-ts-mode) .
+      ("~/.nvm/versions/node/v22.21.1/bin/typescript-language-server" "--stdio")))
   (setq eglot-autoshutdown t))
 
 ;; Syntax checking
@@ -427,6 +430,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Typescript & Javascript ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; - I've installed `typescript-language-server' globally using
+;; `npm install -g typescript-language-server'. This package requires periodic updates.
+;; Don't forget to update eglot's path to this LSP server.
+;; - Also, it's good to periodically update the treesit packages.
 
 (use-package typescript-ts-mode
   :ensure nil

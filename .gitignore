@@ -13,3 +13,4 @@ tmp/
 tree-sitter/
 open_router_api_key
 secrets.el
+location-tags.el
