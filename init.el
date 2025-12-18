@@ -458,13 +458,38 @@
   :ensure nil
   :mode (("\\.json\\'" . json-ts-mode)))
 
-;; Debt: I am relying on a global installation of Biome.
-;; It's probably using the default settings, not the project settings.
 (use-package biomejs-format
   :ensure t
+  :custom
+  ;; Use project-local biome if available, fall back to global
+  (biomejs-format-command
+   (or (when-let ((project-root (locate-dominating-file default-directory "biome.json")))
+         (let ((local-biome (expand-file-name "node_modules/.bin/biome" project-root)))
+           (when (file-executable-p local-biome)
+             local-biome)))
+       "biome"))
   :hook ((typescript-ts-mode . biomejs-format-mode)
          (tsx-ts-mode . biomejs-format-mode)
-         (js-ts-mode . biomejs-format-mode)))
+         (js-ts-mode . biomejs-format-mode))
+  :config
+  (defun biomejs-organize-imports ()
+    "Organize imports using Biome check if biome.json exists."
+    (when-let ((project-root (locate-dominating-file buffer-file-name "biome.json")))
+      (let ((biome-cmd (or (let ((local-biome (expand-file-name "node_modules/.bin/biome" project-root)))
+                             (when (file-executable-p local-biome)
+                               local-biome))
+                           "biome")))
+        (when buffer-file-name
+          (call-process biome-cmd nil nil nil "check" "--write" buffer-file-name)
+          (revert-buffer t t t)))))
+
+  (defun biomejs-format-before-save ()
+    "Run Biome organize imports before save."
+    (when (and (derived-mode-p 'typescript-ts-mode 'tsx-ts-mode 'js-ts-mode)
+               (locate-dominating-file buffer-file-name "biome.json"))
+      (biomejs-organize-imports)))
+
+  (add-hook 'before-save-hook #'biomejs-format-before-save))
 
 (use-package nvm
   :ensure t)
