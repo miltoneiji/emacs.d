@@ -281,7 +281,7 @@
   :config
   (setq ;;modus-themes-to-toggle '(modus-vivendi modus-operandi)
         ;;modus-themes-to-toggle '(modus-vivendi-tinted modus-operandi-tinted)
-        modus-themes-to-toggle '(modus-vivendi-deuteranopia modus-operandi-deuteranopia)
+        modus-themes-to-toggle '(modus-operandi-deuteranopia modus-vivendi-deuteranopia)
         ;;modus-themes-to-toggle '(modus-vivendi-tritanopia modus-operandi-tritanopia)
         modus-themes-bold-constructs nil
         modus-themes-italic-constructs t)
@@ -498,12 +498,18 @@
 ;;; misc ;;
 ;;;;;;;;;;;
 
+(use-package adaptive-wrap
+  :ensure t)
+
 (use-package markdown-mode
   :ensure t
-  :config
-  (add-hook 'markdown-mode-hook 'turn-off-auto-fill)
+  :hook ((markdown-mode . (lambda ()
+                            (turn-off-auto-fill)
+                            (visual-line-mode 1)
+                            (adaptive-wrap-prefix-mode 1))))
   :custom
-  (markdown-hide-urls t))
+  (markdown-hide-urls t)
+  (markdown-fontify-code-blocks-natively t))
 
 (use-package yaml-mode
   :ensure t)
@@ -541,10 +547,12 @@
 (use-package visual-fill-column
   :ensure t)
 
-(use-package writeroom-mode
+(use-package olivetti
   :ensure t
-  :config
-  (setq writeroom-width 120))
+  :hook (markdown-mode . olivetti-mode)
+  :custom
+  (olivetti-body-width 100)
+  (olivetti-style 'fancy))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Other key bindings ;;
@@ -641,13 +649,13 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(biomejs-format claude-code corfu eat embark-consult evil-collection
-                    evil-escape exec-path-from-shell general
+   '(adaptive-wrap biomejs-format claude-code corfu eat embark-consult
+                    evil-collection evil-escape exec-path-from-shell general
                     git-gutter-fringe gptel iter2 magit marginalia
-                    markdown-mode modus-themes no-littering nvm
+                    markdown-mode modus-themes no-littering nvm olivetti
                     orderless org-appear pet ruff-format smartparens
                     treemacs-evil treesit-fold undo-tree vertico
-                    writeroom-mode yaml-mode yasnippet))
+                    yaml-mode yasnippet))
  '(package-vc-selected-packages
    '((ts-fold :url "https://github.com/emacs-tree-sitter/ts-fold"))))
 (custom-set-faces
