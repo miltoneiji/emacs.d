@@ -49,6 +49,7 @@
       '("preferences"
         "tk-modeline"
         "setup-org-mode"
+        "setup-clojure"
         "tk-location-tags"))
 
 ;; Load secrets if available
@@ -648,14 +649,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(adaptive-wrap biomejs-format claude-code corfu eat embark-consult
-                    evil-collection evil-escape exec-path-from-shell general
-                    git-gutter-fringe gptel iter2 magit marginalia
-                    markdown-mode modus-themes no-littering nvm olivetti
-                    orderless org-appear pet ruff-format smartparens
-                    treemacs-evil treesit-fold undo-tree vertico
-                    yaml-mode yasnippet))
+ '(package-selected-packages nil)
  '(package-vc-selected-packages
    '((ts-fold :url "https://github.com/emacs-tree-sitter/ts-fold"))))
 (custom-set-faces

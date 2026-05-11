@@ -13,9 +13,11 @@
     (facts 1)
     (fact 1)))
 
-(use-package clojure-mode)
+(use-package clojure-mode
+  :ensure t)
 
 (use-package cider
+  :ensure t
   :init
   (add-hook 'cider-mode-hook #'tk/clojure-custom-indent)
   :custom
@@ -34,6 +36,7 @@
     "t t" 'cider-test-run-test))
 
 (use-package clj-refactor
+  :ensure t
   :hook ((clojure-mode . (lambda ()
 			   (clj-refactor-mode 1)
 			   (yas-minor-mode 1)))))
