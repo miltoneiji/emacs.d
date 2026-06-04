@@ -18,22 +18,26 @@
 
 (use-package cider
   :ensure t
+  :defer t
   :init
   (add-hook 'cider-mode-hook #'tk/clojure-custom-indent)
   :custom
   (cider-repl-display-help-banner nil)
   :config
-  (map-local! clojure-mode-map
-    "a"   'cider-jack-in
-    "e"   '(:ignore t :which-key "eval")
-    "e f" 'cider-eval-defun-at-point
-    "e e" 'cider-eval-last-sexp
-    "e b" 'cider-eval-buffer
-    "r"   '(:ignore t :which-key "repl")
-    "r b" 'cider-switch-to-repl-buffer
-    "r c" 'tk/clean-repl
-    "t"   '(:ignore t :which-key "test")
-    "t t" 'cider-test-run-test))
+  (general-define-key
+   :states  'motion
+   :keymaps 'clojure-mode-map
+   :prefix  ","
+   "a"   'cider-jack-in
+   "e"   '(:ignore t :which-key "eval")
+   "e f" 'cider-eval-defun-at-point
+   "e e" 'cider-eval-last-sexp
+   "e b" 'cider-eval-buffer
+   "r"   '(:ignore t :which-key "repl")
+   "r b" 'cider-switch-to-repl-buffer
+   "r c" 'tk/clean-repl
+   "t"   '(:ignore t :which-key "test")
+   "t t" 'cider-test-run-test))
 
 (use-package clj-refactor
   :ensure t

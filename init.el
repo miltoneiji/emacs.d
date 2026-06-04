@@ -282,7 +282,7 @@
   :config
   (setq ;;modus-themes-to-toggle '(modus-vivendi modus-operandi)
         ;;modus-themes-to-toggle '(modus-vivendi-tinted modus-operandi-tinted)
-        modus-themes-to-toggle '(modus-operandi-deuteranopia modus-vivendi-deuteranopia)
+        modus-themes-to-toggle '(modus-vivendi-deuteranopia modus-operandi-deuteranopia)
         ;;modus-themes-to-toggle '(modus-vivendi-tritanopia modus-operandi-tritanopia)
         modus-themes-bold-constructs nil
         modus-themes-italic-constructs t)
@@ -361,7 +361,8 @@
                           (evil-local-set-key 'normal (kbd "g d") 'xref-find-definitions)
                           (evil-local-set-key 'normal (kbd "g r") 'xref-find-references)))
   :config
-  (add-to-list 'eglot-server-programs '(python-ts-mode . ("pyright-langserver" "--stdio")))
+  ;; (add-to-list 'eglot-server-programs '(python-ts-mode . ("pyright-langserver" "--stdio")))
+  (add-to-list 'eglot-server-programs '(python-ts-mode . ("ty" "server")))
   (add-to-list 'eglot-server-programs
     '((typescript-ts-mode tsx-ts-mode js-ts-mode) .
       ("~/.nvm/versions/node/v22.21.1/bin/typescript-language-server" "--stdio")))
@@ -459,38 +460,38 @@
   :ensure nil
   :mode (("\\.json\\'" . json-ts-mode)))
 
-(use-package biomejs-format
-  :ensure t
-  :custom
-  ;; Use project-local biome if available, fall back to global
-  (biomejs-format-command
-   (or (when-let ((project-root (locate-dominating-file default-directory "biome.json")))
-         (let ((local-biome (expand-file-name "node_modules/.bin/biome" project-root)))
-           (when (file-executable-p local-biome)
-             local-biome)))
-       "biome"))
-  :hook ((typescript-ts-mode . biomejs-format-mode)
-         (tsx-ts-mode . biomejs-format-mode)
-         (js-ts-mode . biomejs-format-mode))
-  :config
-  (defun biomejs-organize-imports ()
-    "Organize imports using Biome check if biome.json exists."
-    (when-let ((project-root (locate-dominating-file buffer-file-name "biome.json")))
-      (let ((biome-cmd (or (let ((local-biome (expand-file-name "node_modules/.bin/biome" project-root)))
-                             (when (file-executable-p local-biome)
-                               local-biome))
-                           "biome")))
-        (when buffer-file-name
-          (call-process biome-cmd nil nil nil "check" "--write" buffer-file-name)
-          (revert-buffer t t t)))))
-
-  (defun biomejs-format-before-save ()
-    "Run Biome organize imports before save."
-    (when (and (derived-mode-p 'typescript-ts-mode 'tsx-ts-mode 'js-ts-mode)
-               (locate-dominating-file buffer-file-name "biome.json"))
-      (biomejs-organize-imports)))
-
-  (add-hook 'before-save-hook #'biomejs-format-before-save))
+;;(use-package biomejs-format
+;;  :ensure t
+;;  :custom
+;;  ;; Use project-local biome if available, fall back to global
+;;  (biomejs-format-command
+;;   (or (when-let ((project-root (locate-dominating-file default-directory "biome.json")))
+;;         (let ((local-biome (expand-file-name "node_modules/.bin/biome" project-root)))
+;;           (when (file-executable-p local-biome)
+;;             local-biome)))
+;;       "biome"))
+;;  :hook ((typescript-ts-mode . biomejs-format-mode)
+;;         (tsx-ts-mode . biomejs-format-mode)
+;;         (js-ts-mode . biomejs-format-mode))
+;;  :config
+;;  (defun biomejs-organize-imports ()
+;;    "Organize imports using Biome check if biome.json exists."
+;;    (when-let ((project-root (locate-dominating-file buffer-file-name "biome.json")))
+;;      (let ((biome-cmd (or (let ((local-biome (expand-file-name "node_modules/.bin/biome" project-root)))
+;;                             (when (file-executable-p local-biome)
+;;                               local-biome))
+;;                           "biome")))
+;;        (when buffer-file-name
+;;          (call-process biome-cmd nil nil nil "check" "--write" buffer-file-name)
+;;          (revert-buffer t t t)))))
+;;
+;;  (defun biomejs-format-before-save ()
+;;    "Run Biome organize imports before save."
+;;    (when (and (derived-mode-p 'typescript-ts-mode 'tsx-ts-mode 'js-ts-mode)
+;;               (locate-dominating-file buffer-file-name "biome.json"))
+;;      (biomejs-organize-imports)))
+;;
+;;  (add-hook 'before-save-hook #'biomejs-format-before-save))
 
 (use-package nvm
   :ensure t)
